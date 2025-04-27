@@ -25,12 +25,13 @@ class TopoTri:public Mesh
 public:
 	TopoTri():Mesh(){}
 	TopoTri
-	(  std::unique_ptr<float[]> &data_img,  // array of image data
-		 std::size_t width, std::size_t height,  // Image dimensions
-		 bool omit_noData,
-		 float noDataVal,
-		 float tri_res, // Resolution factor (0 - 1) for triangulation
-		 bool simplify_border // Specifies whether to eliminate border apices
+	(
+		std::vector<float> &data_img,  // array of image data
+		std::size_t width, std::size_t height,  // Image dimensions
+		bool omit_noData,
+		float noDataVal,
+		float tri_res, // Resolution factor (0 - 1) for triangulation
+		bool simplify_border // Specifies whether to eliminate border apices
 	);
 
 	static float CalculateRes(int sliderVal, std::size_t n_pix);

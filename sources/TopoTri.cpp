@@ -26,9 +26,9 @@ typedef std::tuple<LattEdge, long, long> LattSharedEdge; // edge and indices of 
 void GetPointImage
 (
    size_t width, size_t height, // Original dimensions of image
-   std::unique_ptr<bool[]> &patch_img, // Provided bool patch image
-   std::unique_ptr<float[]> &data_img, // Original data (pixel) image
-   std::unique_ptr<float[]> &point_img // Contains (extended) interpolated point image
+   std:::vector<bool> &patch_img, // Provided bool patch image
+   std:::vector<float> &data_img, // Original data (pixel) image
+   std:::vector<float> &point_img // Contains (extended) interpolated point image
 )
 {
    int row[] = { -1, 0, -1, 0 };
@@ -236,8 +236,8 @@ const short right_border_mask = 0b1001;
 // Returns     :
 //-----------------------------------------------------------------------------
 void InitFlagImage
-(  std::unique_ptr<bool[]> &patch_img, // Patch image: true if pixel contains valid data, false if no-date
-   std::unique_ptr<short[]> &flag_img,  // Contains (extended) image of point flags upon return
+(  std:::vector<bool> &patch_img, // Patch image: true if pixel contains valid data, false if no-date
+   std:::vector<short> &flag_img,  // Contains (extended) image of point flags upon return
    size_t width, size_t height // Image dimensions
 )
 {
@@ -325,8 +325,8 @@ void InitFlagImage
 // Returns     :
 //-----------------------------------------------------------------------------
 bool FlagPoints
-(  std::unique_ptr<float[]> &point_img, // (Extended) point image
-   std::unique_ptr<short[]> &flag_img,  // (Extended) flag image - to be modified here
+(  std:::vector<float> &point_img, // (Extended) point image
+   std:::vector<short> &flag_img,  // (Extended) flag image - to be modified here
    size_t ext_width, size_t ext_height, // (Extended) image dimensions
    float tri_res  // User-specified resolution parameter (0 - 1)
 )
@@ -335,7 +335,7 @@ bool FlagPoints
    double inv_L_unif = sqrt(tri_res); // ~ mean inverse vertex spacing
 
    // Find local curvature in X for weighting
-   auto distX_img = std::unique_ptr<float[]>(new float[ext_width * ext_height]);
+   auto distX_img = std:::vector<float>(new float[ext_width * ext_height]);
    if (distX_img == nullptr)
    {
       return false;
@@ -387,11 +387,7 @@ bool FlagPoints
    }
    
    // Oscillate in X
-   auto phaseX_img = std::unique_ptr<double[]>(new double[ext_width * ext_height]);
-   if (phaseX_img == nullptr)
-   {
-      return false;
-   }
+   auto phaseX_img = std:::vector<double>(ext_width * ext_height);
    iPos = 0;
    for (size_t iY = 0; iY < ext_height; iY++)
    {
@@ -414,7 +410,7 @@ bool FlagPoints
    distX_img.release();
 
    // Create a tic image for vertex placement
-   auto tic_img = std::unique_ptr<bool[]>(new bool[ext_width * ext_height]);
+   auto tic_img = std:::vector<bool>(new bool[ext_width * ext_height]);
    if (tic_img == nullptr)
    {
       return false;
@@ -437,14 +433,9 @@ bool FlagPoints
          iPos++;
       }
    }
-   phaseX_img.release();
    
    // Find local curvature in Y for weighting
-   auto distY_img = std::unique_ptr<float[]>(new float[ext_width * ext_height]);
-   if (distY_img == nullptr)
-   {
-      return false;
-   }
+   auto distY_img = std:::vector<float>(ext_width * ext_height);
    float wY_tot = 0.;
    int nY_tot_body_pts = 0;
    float abs_curvY_max = 0;
@@ -492,11 +483,7 @@ bool FlagPoints
    }
 
    // Oscillate in Y
-   auto phaseY_img = std::unique_ptr<double[]>(new double[ext_width * ext_height]);
-   if (phaseY_img == nullptr)
-   {
-      return false;
-   }
+   auto phaseY_img = std:::vector<double>(ext_width * ext_height);
    for (size_t iX = 0; iX < ext_width; iX++)
    {
       double phase = 0.;
@@ -558,9 +545,9 @@ bool FlagPoints
 
 //
 void IndexPoints
-(  std::unique_ptr<short[]> &flag_img, // (Extended) image of flag bits for each point
+(  std:::vector<short> &flag_img, // (Extended) image of flag bits for each point
    size_t ext_width, size_t ext_height, // (Extended) image dimensions
-   std::unique_ptr<long[]> &index_img, // Contains (extended) point-index image upon return
+   std:::vector<long> &index_img, // Contains (extended) point-index image upon return
    std::vector<LattPoint> &pts // Contains points (vertices) upon return
 )
 {
@@ -676,14 +663,14 @@ void BuildRowLowerTriangle
 // Description :  Scans a row to find the next vertex point based on preset flags.
 //                The point array index is returned in pos_mn
 // Parameters  :
-//    std::unique_ptr<short[]> &flag_img - Flag bits for each point
+//    std:::vector<short> &flag_img - Flag bits for each point
 //    int ext_width - (Extended) image width
 //    int dY - Row offset (typically 0 or 1)
 //    int pos_00 - Reference origin index
 //    int pos_mn - Contains the index of the vertex point upon return
 // Returns     :  bool - true if vertex found, false otherwise
 //-----------------------------------------------------------------------------
-bool GetNextRowVertex(std::unique_ptr<short[]> &flag_img, size_t ext_width, long dY, long pos_00, long &pos_mn)
+bool GetNextRowVertex(std:::vector<short> &flag_img, size_t ext_width, long dY, long pos_00, long &pos_mn)
 {
    long dX0 = 1;
    short flag = 0;
@@ -727,8 +714,8 @@ bool GetNextRowVertex(std::unique_ptr<short[]> &flag_img, size_t ext_width, long
 //-----------------------------------------------------------------------------
 bool BuildRowTriangles
 (
-   std::unique_ptr<short[]> &flag_img, // (Extended) image of flag bits for each point
-   std::unique_ptr<long[]> &index_img, // (Extended) image of point indices (-1 for no-data)
+   std:::vector<short> &flag_img, // (Extended) image of flag bits for each point
+   std:::vector<long> &index_img, // (Extended) image of point indices (-1 for no-data)
    size_t ext_width, size_t ext_height, // (Extended) image dimensions
    TriIndexVector &triangs, // Contains triangle indices upon return
    std::vector<std::tuple<LattEdge, long, long>> &edge_triangs, // Contains shared edges and sharing triangles upon return
@@ -1064,7 +1051,7 @@ bool CleanupTriangs
 //-----------------------------------------------------------------------------
 bool ReduceBorderPoints
 (
-   std::unique_ptr<short[]> &flag_img, // (Extended) flag image specifying point characteristics
+   std:::vector<short> &flag_img, // (Extended) flag image specifying point characteristics
    size_t width, size_t height, // (Extended) image dimensions
    std::vector<LattPoint> &pts, // Points (vertices)
    TriIndexVector &triangs, // Triangles
@@ -1248,7 +1235,7 @@ bool ReduceBorderPoints
 //-----------------------------------------------------------------------------
 bool SimplifyBorder
 (
-   std::unique_ptr<short[]> &flag_img, // (Extended) flag image specifying point characteristics
+   std:::vector<short> &flag_img, // (Extended) flag image specifying point characteristics
    size_t width, size_t height, // (Extneded) image dimensions
    std::vector<LattPoint> &pts, // Points (vertices)
    TriIndexVector &triangs, // Triangles
@@ -1645,8 +1632,8 @@ bool MakeDelaunayTriangles
 // Returns     :
 //-----------------------------------------------------------------------------
 void GetNormals
-(	std::unique_ptr<float[]> &point_img, // (Extended) point image
-	std::unique_ptr<short[]> &flag_img,  // (Extended) flag image - to be modified here
+(	std:::vector<float> &point_img, // (Extended) point image
+	std:::vector<short> &flag_img,  // (Extended) flag image - to be modified here
 	size_t ext_width, size_t ext_height, // (Extended) image dimensions
 	std::vector<LattPoint> &pts, // Points to be retained
 	std::vector<vtr3> &norms // Contains normals to specfied points upon return
@@ -1703,8 +1690,8 @@ void GetNormals
 
 //
 void GetRange
-(	std::unique_ptr<float[]> &point_img, // (Extended) point image
-	std::unique_ptr<short[]> &flag_img,  // (Extended) flag image - to be modified here
+(	std::vector<float> &point_img, // (Extended) point image
+	std::vector<short> &flag_img,  // (Extended) flag image - to be modified here
 	size_t ext_width, size_t ext_height, // (Extended) image dimensions
 	MeshRange &meshRange
 )
@@ -1740,7 +1727,7 @@ void GetRange
 // Returns     :  bool - true if successful, false otherwise
 //-----------------------------------------------------------------------------
 TopoTri::TopoTri
-(	std::unique_ptr<float[]> &data_img,  // array of image data
+(	std::vector<float> &data_img,  // array of image data
 	size_t width, size_t height,  // Image dimensions
 	bool omit_noData,
 	float noDataVal,
@@ -1749,11 +1736,7 @@ TopoTri::TopoTri
 ):Mesh()
 {
 	// Build bool patch image : true if valid pixel, false if "no data"
-	auto patch_img = std::unique_ptr<bool[]>(new bool[width * height]);
-	if (patch_img == nullptr)
-	{
-		return;
-	}
+	auto patch_img = std::vector<double>(width * height);
 	int iPos = 0;
 	for (uint32_t iY = 0; iY < height; iY++)
 	{
@@ -1767,7 +1750,7 @@ TopoTri::TopoTri
 	// Create point image specifying pixel corners
 	size_t ext_width = width + 1;
 	size_t ext_height = height + 1;
-	auto point_img = std::unique_ptr<float[]>(new float[ext_width * ext_height]);
+	auto point_img = std:::vector<float>(new float[ext_width * ext_height]);
 	if (point_img == nullptr)
 	{
 		return;
@@ -1775,13 +1758,9 @@ TopoTri::TopoTri
 	GetPointImage(width, height, patch_img, data_img, point_img);
 	
 	// Init flag image specifying point character
-	auto flag_img = std::unique_ptr<short[]>(new short[ext_width * ext_height]);
-	if (flag_img == nullptr)
-	{
-		return;
-	}
+	auto flag_img = std::vector<short>(ext_width * ext_height);
+
 	InitFlagImage(patch_img, flag_img, width, height);
-	delete [] patch_img.release();
 
 	// Flag additional vertices, depending on resolution
 	if (!FlagPoints(point_img, flag_img, ext_width, ext_height, tri_res))
@@ -1790,7 +1769,7 @@ TopoTri::TopoTri
 	}
 
 	// Create an image of point indices
-	auto index_img = std::unique_ptr<long[]>(new long[ext_width * ext_height]);
+	auto index_img = std:::vector<long>(new long[ext_width * ext_height]);
 	if (index_img == nullptr)
 	{
 		return;
