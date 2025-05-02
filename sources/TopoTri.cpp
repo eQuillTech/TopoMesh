@@ -7,13 +7,10 @@
 
 #include "Topo.hpp"
 
-using namespace std;
-
 // Type-defs for generating triangulations on a 2-D lattice
 typedef std::pair<long, long> LattPoint; // values are point coords
 typedef std::pair<long, long> LattEdge; // values are point indices
 typedef std::tuple<LattEdge, long, long> LattSharedEdge; // edge and indices of sharing triangs
-
 
 //-----------------------------------------------------------------------------
 // Name        :  GetPointImage
@@ -25,7 +22,7 @@ typedef std::tuple<LattEdge, long, long> LattSharedEdge; // edge and indices of 
 //-----------------------------------------------------------------------------
 static void GetPointImage
 (
-   size_t width, size_t height, // Original dimensions of image
+   std::size_t width, std::size_t height, // Original dimensions of image
    std::vector<bool> &patch_img, // Provided bool patch image
    std::vector<float> &data_img, // Original data (pixel) image
    std::vector<float> &point_img // Contains (extended) interpolated point image
@@ -34,16 +31,16 @@ static void GetPointImage
    int row[] = { -1, 0, -1, 0 };
    int col[] = { 0, -1, -1, 0 };
 
-   std::size_t iPos = 0;
-   for (size_t iY = 0; iY <= height; iY++)
+   std::std::size_t iPos = 0;
+   for (std::size_t iY = 0; iY <= height; iY++)
    {
-      for (size_t iX = 0; iX <= width; iX++)
+      for (std::size_t iX = 0; iX <= width; iX++)
       {
          float val = 0;
          short n_avg = 0;
          for (int k = 0; k < 4; ++k)
          {
-            size_t iXp = iX + col[k], iYp = iY + row[k];
+            std::size_t iXp = iX + col[k], iYp = iY + row[k];
             if ((iXp >= 0) && (iXp < width) && (iYp >= 0) && (iYp < height))
             {
                if (patch_img[(iXp) + width * (iYp)])
@@ -238,13 +235,13 @@ const short right_border_mask = 0b1001;
 static void InitFlagImage
 (  std::vector<bool> &patch_img, // Patch image: true if pixel contains valid data, false if no-date
    std::vector<short> &flag_img,  // Contains (extended) image of point flags upon return
-   size_t width, size_t height // Image dimensions
+   std::size_t width, std::size_t height // Image dimensions
 )
 {
    int iPos = 0;
-   for (size_t iY = 0; iY <= height; iY++)
+   for (std::size_t iY = 0; iY <= height; iY++)
    {
-      for (size_t iX = 0; iX <= width; iX++)
+      for (std::size_t iX = 0; iX <= width; iX++)
       {
          bool fixed = false;
          bool vertex = false;
@@ -327,7 +324,7 @@ static void InitFlagImage
 static bool FlagPoints
 (  std::vector<float> &point_img, // (Extended) point image
    std::vector<short> &flag_img,  // (Extended) flag image - to be modified here
-   size_t ext_width, size_t ext_height, // (Extended) image dimensions
+   std::size_t ext_width, std::size_t ext_height, // (Extended) image dimensions
    float tri_res  // User-specified resolution parameter (0 - 1)
 )
 {
@@ -343,10 +340,10 @@ static bool FlagPoints
    float wX_tot = 0.;
    int nX_tot_body_pts = 0;
    float abs_curvX_max = 0;
-   size_t iPos = 0;
-   for (size_t iY = 0; iY < ext_height; iY++)
+   std::size_t iPos = 0;
+   for (std::size_t iY = 0; iY < ext_height; iY++)
    {
-      for (size_t iX = 0; iX < ext_width; iX++)
+      for (std::size_t iX = 0; iX < ext_width; iX++)
       {
          float dist = 0;
          if (flag_img[iPos] & data_mask)
@@ -389,10 +386,10 @@ static bool FlagPoints
    // Oscillate in X
    auto phaseX_img = std::vector<double>(ext_width * ext_height);
    iPos = 0;
-   for (size_t iY = 0; iY < ext_height; iY++)
+   for (std::size_t iY = 0; iY < ext_height; iY++)
    {
       double phase = 0.;
-      for (size_t iX = 0; iX < ext_width; iX++)
+      for (std::size_t iX = 0; iX < ext_width; iX++)
       {
          phaseX_img[iPos] = phase;
          double dphase = 0.;
@@ -416,10 +413,10 @@ static bool FlagPoints
       return false;
    }
    iPos = 0;
-   for (size_t iY = 0; iY < ext_height; iY++)
+   for (std::size_t iY = 0; iY < ext_height; iY++)
    {
      double prev_phase = 0;
-     for (size_t iX = 0; iX < ext_width; iX++)
+     for (std::size_t iX = 0; iX < ext_width; iX++)
       {
          bool tic = false;
          double phase = phaseX_img[iPos];
@@ -440,9 +437,9 @@ static bool FlagPoints
    int nY_tot_body_pts = 0;
    float abs_curvY_max = 0;
    iPos = 0;
-   for (size_t iY = 0; iY < ext_height; iY++)
+   for (std::size_t iY = 0; iY < ext_height; iY++)
    {
-      for (size_t iX = 0; iX < ext_width; iX++)
+      for (std::size_t iX = 0; iX < ext_width; iX++)
       {
          float dist = 0;
          if (flag_img[iPos] & data_mask)
@@ -484,10 +481,10 @@ static bool FlagPoints
 
    // Oscillate in Y
    auto phaseY_img = std::vector<double>(ext_width * ext_height);
-   for (size_t iX = 0; iX < ext_width; iX++)
+   for (std::size_t iX = 0; iX < ext_width; iX++)
    {
       double phase = 0.;
-      for (size_t iY = 0; iY < ext_height; iY++)
+      for (std::size_t iY = 0; iY < ext_height; iY++)
       {
          iPos = (iX) + ext_width * (iY);
          phaseY_img[iPos] = phase;
@@ -505,10 +502,10 @@ static bool FlagPoints
    distY_img.release();
 
    // Modify tic image to indicate coincidence of x- and y-tics
-   for (size_t iX = 0; iX < ext_width; iX++)
+   for (std::size_t iX = 0; iX < ext_width; iX++)
    {
      double prev_phase = 0;
-     for (size_t iY = 0; iY < ext_height; iY++)
+     for (std::size_t iY = 0; iY < ext_height; iY++)
      {
          iPos = (iX) + ext_width * (iY);
          bool tic = false;
@@ -525,11 +522,11 @@ static bool FlagPoints
    phaseY_img.release();
 
    // Flag additional fixed vertices
-   size_t nCount=0;
+   std::size_t nCount=0;
    iPos = 0;
-   for (size_t iY = 0; iY < ext_height; iY++)
+   for (std::size_t iY = 0; iY < ext_height; iY++)
    {
-      for (size_t iX = 0; iX < ext_width; iX++)
+      for (std::size_t iX = 0; iX < ext_width; iX++)
       {
          if (tic_img[iPos])
          {
@@ -546,17 +543,17 @@ static bool FlagPoints
 //
 static void IndexPoints
 (  std::vector<short> &flag_img, // (Extended) image of flag bits for each point
-   size_t ext_width, size_t ext_height, // (Extended) image dimensions
+   std::size_t ext_width, std::size_t ext_height, // (Extended) image dimensions
    std::vector<long> &index_img, // Contains (extended) point-index image upon return
    std::vector<LattPoint> &pts // Contains points (vertices) upon return
 )
 {
    // Fill vector and create an index look-up image
-   size_t n_pts = 0;
-   size_t iPos = 0;
-   for (size_t iY = 0; iY < ext_height; iY++)
+   std::size_t n_pts = 0;
+   std::size_t iPos = 0;
+   for (std::size_t iY = 0; iY < ext_height; iY++)
    {
-      for (size_t iX = 0; iX < ext_width; iX++)
+      for (std::size_t iX = 0; iX < ext_width; iX++)
       {
          long index = -1;
          if (flag_img[iPos] & vertex_mask)
@@ -588,8 +585,8 @@ static void BuildRowUpperTriangle
    TriIndexVector &triangs // Contains triangle indices upon return
 )
 {
-   size_t n_edges = (int)edge_triangs.size();
-   size_t n_triangs = (int)triangs.size();
+   std::size_t n_edges = (int)edge_triangs.size();
+   std::size_t n_triangs = (int)triangs.size();
 
    LattEdge top_edge({ind_00, ind_n0});
    if (IsTopEdgeShared(top_edge, bottom_edge_triangs))
@@ -635,8 +632,8 @@ static void BuildRowLowerTriangle
    TriIndexVector &triangs // Contains triangle indices upon return
 )
 {
-   size_t n_edges = edge_triangs.size();
-   size_t n_triangs = triangs.size();
+   std::size_t n_edges = edge_triangs.size();
+   std::size_t n_triangs = triangs.size();
 
    LattEdge bottom_edge({ind_01, ind_m1});
    top_edge_triangs.emplace(bottom_edge, n_triangs);
@@ -670,7 +667,7 @@ static void BuildRowLowerTriangle
 //    int pos_mn - Contains the index of the vertex point upon return
 // Returns     :  bool - true if vertex found, false otherwise
 //-----------------------------------------------------------------------------
-static bool GetNextRowVertex(std::vector<short> &flag_img, size_t ext_width, long dY, long pos_00, long &pos_mn)
+static bool GetNextRowVertex(std::vector<short> &flag_img, std::size_t ext_width, long dY, long pos_00, long &pos_mn)
 {
    long dX0 = 1;
    short flag = 0;
@@ -716,20 +713,20 @@ static bool BuildRowTriangles
 (
    std::vector<short> &flag_img, // (Extended) image of flag bits for each point
    std::vector<long> &index_img, // (Extended) image of point indices (-1 for no-data)
-   size_t ext_width, size_t ext_height, // (Extended) image dimensions
+   std::size_t ext_width, std::size_t ext_height, // (Extended) image dimensions
    TriIndexVector &triangs, // Contains triangle indices upon return
    std::vector<std::tuple<LattEdge, long, long>> &edge_triangs, // Contains shared edges and sharing triangles upon return
    std::vector<std::list<long>> &pt_edges // Contains shared edges associated with each vertex upon return
 )
 {
    std::queue<std::pair<LattEdge, long>> bottom_edge_triangs; // Edge and triangle
-   for (size_t iY = 0; iY < ext_height - 1; iY++)
+   for (std::size_t iY = 0; iY < ext_height - 1; iY++)
    {
       TriIndexVector top_triangs;
       std::queue<std::pair<LattEdge, long>> top_edge_triangs; // Edge and triangle
       std::pair<LattEdge, long> right_edge_triang; // Edge and triangle
       bool right_edge_valid = false;
-      for (size_t iX = 0; iX < ext_width - 1; iX++)
+      for (std::size_t iX = 0; iX < ext_width - 1; iX++)
       {
          long pos_00 = (iX) +  ext_width * (iY);
          short flag_00 = flag_img[pos_00];
@@ -843,7 +840,7 @@ static bool BuildRowTriangles
 static bool FindThirdIndex(const TriIndex &triang, long jp, long jq, long &jr)
 {
    jr = -1;
-   for (size_t ir = 0; ir < 3; ir++)
+   for (std::size_t ir = 0; ir < 3; ir++)
    {
       jr = triang._p[ir];
       if ((jr != jp) && (jr != jq))
@@ -941,14 +938,14 @@ static bool CleanupTriangs
 )
 {
    // Reindex points
-   size_t n_pts = pts.size();
-   size_t n_edges = edge_triangs.size();
-   size_t n_triangs = triangs.size();
+   std::size_t n_pts = pts.size();
+   std::size_t n_edges = edge_triangs.size();
+   std::size_t n_triangs = triangs.size();
 
    std::vector<long> ind_pts;
    ind_pts.resize(n_pts);
    long n_ptsp = 0;
-   for (size_t jpt = 0; jpt < n_pts; jpt++)
+   for (std::size_t jpt = 0; jpt < n_pts; jpt++)
    {
       long jptp = -1;
       if (!remove_pts[jpt])
@@ -967,7 +964,7 @@ static bool CleanupTriangs
    std::vector<long> ind_edges;
    ind_edges.resize(n_edges);
    long n_edgesp = 0;
-   for (size_t jedge = 0; jedge < n_edges; jedge++)
+   for (std::size_t jedge = 0; jedge < n_edges; jedge++)
    {
       long jedgep = -1;
       if (!remove_edges[jedge])
@@ -984,7 +981,7 @@ static bool CleanupTriangs
    std::vector<long> ind_triangs;
    ind_triangs.resize(n_triangs);
    long n_triangsp = 0;
-   for (size_t jtriang = 0; jtriang < n_triangs; jtriang++ )
+   for (std::size_t jtriang = 0; jtriang < n_triangs; jtriang++ )
    {
       long jtriangp = -1;
       if (!remove_triangs[jtriang])
@@ -1026,7 +1023,7 @@ static bool CleanupTriangs
    // Reindex triangle-points
    for (auto &triang: triangs)
    {
-      for (size_t ipt = 0; ipt < 3; ipt++)
+      for (std::size_t ipt = 0; ipt < 3; ipt++)
       {
          long &jpt = triang._p[ipt];
          jpt = ind_pts[jpt];
@@ -1052,16 +1049,16 @@ static bool CleanupTriangs
 static bool ReduceBorderPoints
 (
    std::vector<short> &flag_img, // (Extended) flag image specifying point characteristics
-   size_t width, size_t height, // (Extended) image dimensions
+   std::size_t width, std::size_t height, // (Extended) image dimensions
    std::vector<LattPoint> &pts, // Points (vertices)
    TriIndexVector &triangs, // Triangles
    std::vector<std::tuple<LattEdge, long, long>> &edge_triangs, // Shared edges and sharing triangles
    std::vector<std::list<long>> &pt_edges // Shared edges associated with each point
 )
 {
-   size_t n_pts = pts.size();
-   size_t n_edges = edge_triangs.size();
-   size_t n_triangs = triangs.size();
+   std::size_t n_pts = pts.size();
+   std::size_t n_edges = edge_triangs.size();
+   std::size_t n_triangs = triangs.size();
  
    std::vector<bool> remove_pts(n_pts, false); //  Track whether to keep each point
    std::vector<bool> remove_triangs(n_triangs, false); // Track whether to keep each triangle
@@ -1071,7 +1068,7 @@ static bool ReduceBorderPoints
 
    // Fill queue with points for removal and mark them
    std::queue<long> check_pts;
-   for (size_t jp = 0; jp < n_pts; jp++)
+   for (std::size_t jp = 0; jp < n_pts; jp++)
    {
       auto &p = pts[jp];
       short flag_p = flag_img[(p.first) + width * (p.second)];
@@ -1104,8 +1101,8 @@ static bool ReduceBorderPoints
       }
       
       // Prepare safeguards to avoid infinite loop
-     	size_t n_check_edges = check_edges.size();
-      const size_t max_iters = n_check_edges * n_check_edges;
+     	std::size_t n_check_edges = check_edges.size();
+      const std::size_t max_iters = n_check_edges * n_check_edges;
       long i_check_edges = 0;
 
       while (check_edges.size()>0)
@@ -1236,16 +1233,16 @@ static bool ReduceBorderPoints
 static bool SimplifyBorder
 (
    std::vector<short> &flag_img, // (Extended) flag image specifying point characteristics
-   size_t width, size_t height, // (Extneded) image dimensions
+   std::size_t width, std::size_t height, // (Extneded) image dimensions
    std::vector<LattPoint> &pts, // Points (vertices)
    TriIndexVector &triangs, // Triangles
    std::vector<std::tuple<LattEdge, long, long>> &edge_triangs, // Shared edges and sharing triangles
    std::vector<std::list<long>> &pt_edges // Shared edges associated with each point
 )
 {
-   size_t n_pts = pts.size();
-   size_t n_edges = edge_triangs.size();
-   size_t n_triangs = triangs.size();
+   std::size_t n_pts = pts.size();
+   std::size_t n_edges = edge_triangs.size();
+   std::size_t n_triangs = triangs.size();
 
    std::vector<bool> remove_pts(n_pts, false); //  Track whether to keep each point
    std::vector<bool> remove_triangs(n_triangs, false); // Track whether to keep each triangle
@@ -1293,10 +1290,10 @@ static bool SimplifyBorder
    
    // Create a list of triangles associated with each point
    std::vector<std::list<long>> pt_triangs(n_pts);
-   for (size_t jtriang = 0; jtriang < n_triangs; jtriang++)
+   for (std::size_t jtriang = 0; jtriang < n_triangs; jtriang++)
    {
       auto &triang = triangs[jtriang];
-      for (size_t ip = 0; ip < 3; ip++)
+      for (std::size_t ip = 0; ip < 3; ip++)
       {
          long jp = triang._p[ip];
          pt_triangs[jp].push_back(jtriang);
@@ -1325,9 +1322,9 @@ static bool SimplifyBorder
       }
       
       // Prepare safeguards to avoid infinite loop
-      size_t n_check_edges = check_edges.size();
-      const size_t max_iters = n_check_edges * n_check_edges;
-      size_t i_check_edges = 0;
+      std::size_t n_check_edges = check_edges.size();
+      const std::size_t max_iters = n_check_edges * n_check_edges;
+      std::size_t i_check_edges = 0;
 
       while (check_edges.size()>0)
       {
@@ -1419,7 +1416,7 @@ static bool SimplifyBorder
          auto &triang = triangs[jtriang];
 
          long jrA = -1, jrB = -1;
-         for (size_t ip = 0; ip < 3; ip++)
+         for (std::size_t ip = 0; ip < 3; ip++)
          {
             long jq = triang._p[ip];
             if (jq != jp)
@@ -1465,22 +1462,22 @@ static bool MakeDelaunayTriangles
    std::vector<std::list<long>> &pt_edges // Shared edges associated with each vertex
 )
 {
-   const size_t n_edges = edge_triangs.size();
+   const std::size_t n_edges = edge_triangs.size();
    std::vector<bool> edge_marks(n_edges); // Mark whether each edge needs to be checked
 
    // Build stack of shared edges
    std::stack<long> check_edges;
-   for (size_t jedge = 0; jedge < n_edges; jedge++)
+   for (std::size_t jedge = 0; jedge < n_edges; jedge++)
    {
       check_edges.push(jedge);
       edge_marks[jedge] = true;
    }
 
    // Set arbitrary threshold before rejection of edge
-   size_t max_iters = (std::size_t)(n_edges * log10((double)n_edges + 1.));
+   std::size_t max_iters = (std::std::size_t)(n_edges * log10((double)n_edges + 1.));
    max_iters = (max_iters < 100000)? 100000 : max_iters;
-   size_t n_edges_prev = n_edges;
-   size_t i_iters = 0;
+   std::size_t n_edges_prev = n_edges;
+   std::size_t i_iters = 0;
    while (check_edges.size()>0)
    {
       long jedge = check_edges.top();
@@ -1634,7 +1631,7 @@ static bool MakeDelaunayTriangles
 static void GetNormals
 (	std::vector<float> &point_img, // (Extended) point image
 	std::vector<short> &flag_img,  // (Extended) flag image - to be modified here
-	size_t ext_width, size_t ext_height, // (Extended) image dimensions
+	std::size_t ext_width, std::size_t ext_height, // (Extended) image dimensions
 	std::vector<LattPoint> &pts, // Points to be retained
 	std::vector<vtr3> &norms // Contains normals to specfied points upon return
 )
@@ -1648,7 +1645,7 @@ static void GetNormals
 		double S00(0.),S01(0.),S02(0.);
 		double S10(0.),S11(0.);
 		double S20(0.);
-		size_t iPos=pt.first + (ext_width-1)*pt.second;
+		std::size_t iPos=pt.first + (ext_width-1)*pt.second;
 		for (long diY= -1; diY <= 1; diY++)
 		{
 			if ((iY+diY>=0) && (iY < ext_height))
@@ -1657,7 +1654,7 @@ static void GetNormals
 				{
 					if ((iX+diX>=0) && (iX+diX < ext_width))
 					{
-						size_t iPos_p=iPos+diX+(ext_width)*diY;
+						std::size_t iPos_p=iPos+diX+(ext_width)*diY;
 						if ((flag_img[iPos_p] & data_mask))
 						{
 							double fxy=point_img[iPos_p];
@@ -1692,12 +1689,12 @@ static void GetNormals
 static void GetRange
 (	std::vector<float> &point_img, // (Extended) point image
 	std::vector<short> &flag_img,  // (Extended) flag image - to be modified here
-	size_t ext_width, size_t ext_height, // (Extended) image dimensions
+	std::size_t ext_width, std::size_t ext_height, // (Extended) image dimensions
 	MeshRange &meshRange
 )
 {
 	meshRange.init();
-	size_t iPos(0);
+	std::size_t iPos(0);
 	for (uint32_t iY = 0; iY < ext_height; iY++)
 	{
 		for (uint32_t iX = 0; iX < ext_width; iX++)
@@ -1728,7 +1725,7 @@ static void GetRange
 //-----------------------------------------------------------------------------
 TopoTri::TopoTri
 (	std::vector<float> &data_img,  // array of image data
-	size_t width, size_t height,  // Image dimensions
+	std::size_t width, std::size_t height,  // Image dimensions
 	bool omit_noData,
 	float noDataVal,
 	float tri_res, // Resolution factor (0 - 1) for triangulation
@@ -1748,8 +1745,8 @@ TopoTri::TopoTri
 	}
 
 	// Create point image specifying pixel corners
-	size_t ext_width = width + 1;
-	size_t ext_height = height + 1;
+	std::size_t ext_width = width + 1;
+	std::size_t ext_height = height + 1;
 	auto point_img = std::vector<float>(new float[ext_width * ext_height]);
 	if (point_img == nullptr)
 	{
@@ -1851,11 +1848,11 @@ TopoTri::TopoTri
 //                file-size dependent, roughly log scale.
 // Parameters  :
 //    int sliderVal - value from panel slider (0 - 100)
-//    std::size_t n_pix - image size (pixels)
+//    std::std::size_t n_pix - image size (pixels)
 // Returns     :
 //    float - resolution factor (0 - 1)
 //-----------------------------------------------------------------------------
-float TopoTri::CalculateRes(int sliderVal, size_t n_pix)
+float TopoTri::CalculateRes(int sliderVal, std::size_t n_pix)
 {
    float ratio = (float)sliderVal / 100;
    const float res_root = (float)sqrt(n_pix);

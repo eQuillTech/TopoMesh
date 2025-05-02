@@ -14,17 +14,15 @@
 
 #include "Mesh.hpp"
 
-using namespace std;
-
 bool Mesh::_showData(false);
 
 //find the WFTIndex in the vector, or push it to the back if not found. Return its vector index.
-size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex &wftIndex)
+std::size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex &wftIndex)
 {
 	bool found=false;
-	size_t index=0;
-	size_t nWFT=wftIndexVector.size();
-	for(size_t i=0;i<nWFT;++i)
+	std::size_t index=0;
+	std::size_t nWFT=wftIndexVector.size();
+	for(std::size_t i=0;i<nWFT;++i)
 	{
 		const WFTIndex v=wftIndexVector[i];
 		if(wftIndex==v)
