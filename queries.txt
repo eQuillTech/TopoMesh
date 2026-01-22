@@ -1,0 +1,12 @@
+I want to add the submodule at https://github.com/eQuillTech/grfx to my repo. I am calling:
+git submodule add https://github.com/eQuillTech/grfx grfx
+
+It says:
+fatal: A git directory for 'grfx' is found locally with remote(s):
+  origin        https://github.com/SPAhrenTech/grfx
+If you want to reuse this local git directory instead of cloning again from
+  https://github.com/eQuillTech/grfx
+use the '--force' option. If the local git directory is not the correct repo
+or you are unsure what this means choose another name with the '--name' option.
+
+Can you fix that?

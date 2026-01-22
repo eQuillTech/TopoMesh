@@ -35,7 +35,3 @@ builds/
 *.exe
 *.out
 *.app
-
-tlbx/
-arr/
-weiss/

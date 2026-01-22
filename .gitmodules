@@ -1,7 +1,12 @@
 [submodule "weiss"]
 	path = weiss
-	url = https://github.com/SPAhrenTech/weiss
-
+	url = https://github.com/eQuillTech/weiss
 [submodule "grfx"]
 	path = grfx
-	url = https://github.com/SPAhrenTech/grfx
+	url = https://github.com/eQuillTech/grfx
+[submodule "googletest"]
+	path = googletest
+	url = https://github.com/google/googletest.git
+[submodule "tlbx"]
+	path = tlbx
+	url = https://github.com/eQuillTech/tlbx.git
