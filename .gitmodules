@@ -1,12 +1,16 @@
+[submodule "tlbx"]
+	path = tlbx
+	url = https://github.com/eQuillTech/tlbx.git
 [submodule "weiss"]
 	path = weiss
-	url = https://github.com/eQuillTech/weiss
+	url = https://github.com/eQuillTech/weiss.git
 [submodule "grfx"]
 	path = grfx
 	url = https://github.com/eQuillTech/grfx
 [submodule "googletest"]
 	path = googletest
 	url = https://github.com/google/googletest.git
-[submodule "tlbx"]
-	path = tlbx
-	url = https://github.com/eQuillTech/tlbx.git
+
+[submodule "arr"]
+	path = arr
+	url = https://github.com/eQuillTech/arr.git
