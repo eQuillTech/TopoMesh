@@ -12,7 +12,6 @@
 
 #include "Mesh.hpp"
 
-//
 class TopoTri:public Mesh
 {
 public:

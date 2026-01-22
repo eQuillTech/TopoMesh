@@ -39,7 +39,6 @@ struct WFTIndex
 typedef std::vector<WFTIndex> WFTIndexVector;
 std::size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex &wftIndex);
 
-//
 struct TriIndex
 {
 	union
@@ -59,7 +58,6 @@ struct TriIndex
 	}
 };
 
-//
 struct MeshRange
 {
 	pnt3 _min;
@@ -111,7 +109,7 @@ struct SubMesh
 {
 public:
  	TriIndexVector _tris;	
-	atr _T=atr::Ato;
+	atr3 _T=atr3::Ato;
 	
 	std::size_t numTriang() const{return _tris.size();}
 	

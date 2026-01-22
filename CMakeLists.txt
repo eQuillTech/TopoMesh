@@ -29,3 +29,16 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
     add_subdirectory(grfx)
 endif()
 
+# testing
+option(${PROJECT_NAME}_BUILD_TESTING "Build the testing tree" ON)
+
+if (${PROJECT_NAME}_BUILD_TESTING)
+    # Only add googletest if ${PROJECT_NAME} is the main project
+    if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+        enable_testing()
+        set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+        set(CMAKE_SUPPRESS_REGENERATION ON CACHE BOOL "" FORCE)
+        add_subdirectory(googletest)
+    endif()
+    add_subdirectory(test)
+endif()
