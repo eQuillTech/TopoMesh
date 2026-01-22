@@ -3,20 +3,21 @@
 //
 //  Created by Phil Ahrenkiel on 4/26/23.
 //
-
-#import "TopoMesh.hpp"
-#import "ArrConverter.h"
-#import "TriCalc.h"
+#import <AppKit/AppKit.h>
 #import <fstream>
 #import <iomanip>
+#include <CoreGraphics/CoreGraphics.h>
+#import "TopoMesh.hpp"
+#import "TriCalc.h"
+
 
 @implementation TriCalc
 
 +(TopoTri*)makeTri:(NSString*)imagePath
 {
-	ArrConverter *ac=[ArrConverter alloc];
-
-	CGImageRef image=[ac filepath_to_CGImageRef:imagePath];
+	NSImage *nsimage = [[NSImage alloc] initWithContentsOfFile:imagePath];
+	CGImageRef image = [nsimage CGImageForProposedRect:nil context:nil hints:nil];
+	
 	CGSize imageSize;
 	imageSize.width=CGImageGetWidth(image);
 	imageSize.height=CGImageGetHeight(image);

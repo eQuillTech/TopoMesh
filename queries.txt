@@ -22,3 +22,5 @@ Can you fix that?
 git submodule add https://github.com/eQuillTech/tlbx.git tlbx
 git submodule add https://github.com/eQuillTech/arr.git arr
 git submodule add https://github.com/eQuillTech/weiss.git weiss
+
+I am trying to build target TopoMesh_tests

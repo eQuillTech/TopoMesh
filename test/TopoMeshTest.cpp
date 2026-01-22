@@ -6,7 +6,7 @@
 /*
  * TopoMesh tests
  */
-TEST(TopoMeshTest, tomomesh)
+TEST(TopoMeshTest, topomesh)
 {
 }
 

@@ -3,7 +3,7 @@ set(test_headers
         )
 
 set(test_sources
-        weissTest.cpp
+        TopoMeshTest.cpp
         unit-test-main.cpp
         )
 
