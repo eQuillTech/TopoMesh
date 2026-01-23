@@ -4,8 +4,8 @@ set(TriCalc_sources
         examples.cpp
         )
 
-file(GLOB_RECURSE objc_headers *.h)
-file(GLOB_RECURSE objc_sources *.mm)
+file(GLOB_RECURSE objc_headers CONFIGURE_DEPENDS *.h)
+file(GLOB_RECURSE objc_sources CONFIGURE_DEPENDS *.mm)
 set(objc_files ${objc_headers} ${objc_sources})
 
 add_executable(TriCalc ${objc_files})

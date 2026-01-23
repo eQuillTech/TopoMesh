@@ -8,8 +8,8 @@ else()
 endif()
 
 #
-file(GLOB_RECURSE cpp_headers headers/*.hpp)
-file(GLOB_RECURSE cpp_sources sources/*.cpp)
+file(GLOB_RECURSE cpp_headers CONFIGURE_DEPENDS headers/*.hpp)
+file(GLOB_RECURSE cpp_sources CONFIGURE_DEPENDS sources/*.cpp)
 set(cpp_srcs ${PROJECT_NAME}.hpp ${cpp_headers} ${cpp_sources})
 add_library(${PROJECT_NAME} STATIC ${cpp_srcs})
 target_link_libraries(${PROJECT_NAME} PUBLIC weiss grfx)
