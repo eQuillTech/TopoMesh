@@ -6,7 +6,7 @@
 	url = https://github.com/eQuillTech/weiss.git
 [submodule "grfx"]
 	path = grfx
-	url = https://github.com/eQuillTech/grfx
+	url = https://github.com/eQuillTech/grfx.git
 [submodule "googletest"]
 	path = googletest
 	url = https://github.com/google/googletest.git
