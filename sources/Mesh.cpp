@@ -10,6 +10,7 @@
 
 bool Mesh::_showData(false);
 
+
 //find the WFTIndex in the vector, or push it to the back if not found. Return its vector index.
 std::size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex &wftIndex)
 {
@@ -92,3 +93,91 @@ void Mesh::FindRange()
 		_range.expand(std::get<0>(vertex));
 	}
 }
+
+// Determine sign +/-1, if crossing, +/-0.5 for edges, if not colinear
+float Mesh::intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear)
+{
+		colinear = false;
+		vtr3 pq = p - q;
+		
+		pnt3 pt[3];
+		for(int i=0;i<3;++i)
+		{
+			pt[i] = std::get<0>(_vertex[t._p[i]]);
+		}
+		vtr3 vt[3] = {p - pt[0], p - pt[1], p - pt[2]};
+		double sv[3] = {
+			pq.dot(vt[1].cross(vt[2])),
+			pq.dot(vt[2].cross(vt[0])),
+			pq.dot(vt[0].cross(vt[1]))
+		};
+
+		// signed volumes
+		int nInter = 0;
+		int nPos = 0, nNeg = 0;
+		for (int i = 0; i < 3; ++i)
+		{
+			if (sv[i] == 0.) ++nInter;
+			else if (sv[i] > 0.) ++nPos;
+			else if (sv[i] < 0.) ++nNeg;
+		}
+
+		if (nPos > 0 && nNeg > 0) // mixed
+		{
+			return 0.; //outside
+		}
+	
+		vtr3 n = (pt[1] - pt[0]).cross(pt[2] - pt[0]);
+		vtr3 rc = pt[2] - pnt3::origin;
+		double d = n.dot(rc);
+		double f = (d - n.dot(p - pnt3::origin))/n.dot(pq);
+		if (f <= 0.) return 0.; // opposite ray
+				
+		if (nInter > 1)
+		{
+			colinear = true;
+			return 0.; // intersects two vertices, change q
+		}
+
+		if (nInter == 1) { // intersects a shared edge
+			return 0.5*mth::sgn(sv[0]);
+		}
+		
+		return mth::sgn(sv[0]);
+}
+
+bool Mesh::isIn(const pnt3 &P)
+{
+	double nIntersect = 0; // initialize
+	for(auto& sp: _submesh)
+	{
+		auto sm = sp.second;
+		if(sm->numTriang() == 0) continue;
+		auto t0 = sm->_tris[0];
+		pnt3 p[3] = {std::get<0>(_vertex[t0._i]), std::get<0>(_vertex[t0._j]), std::get<0>(_vertex[t0._k])};
+		
+		const pnt3 q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.; //
+		pnt3 q = q0;
+		vtr3 n = (p[1] - p[0]).cross(p[2] - p[0]);
+		
+		int i = 0;
+		while (i < sm->numTriang())
+		{
+			bool colinear = false;
+			auto s = intersectSign(P, q, sm->_tris[i], colinear);
+			if (colinear)
+			{
+				nIntersect = 0.;
+				i = 0;
+				vtr3 dq = 1.e-4*(2.*rand() - 1.)*n; // random increment along normal
+				q = q0 + dq;
+			} else
+			{
+				nIntersect += s;
+				++i;
+			}
+		}
+	}
+	return nIntersect != 0.;
+}
+

@@ -115,6 +115,7 @@ public:
 	
 	void operator*=(const atr3 &T){_T*=T;}
 	void operator/=(const atr3 &T){_T/=T;}
+	
 };
 
 //
@@ -143,6 +144,11 @@ public:
 	void FindRange();
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
+	
+	float intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear);
+
+	bool isIn(const pnt3 &P);
+
 };
 
 #endif
