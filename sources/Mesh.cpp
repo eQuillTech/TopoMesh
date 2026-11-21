@@ -5,6 +5,8 @@
 #include <queue>
 #include <list>
 #include <stack>
+#include <fstream>
+#include <sstream>
 
 #include "Mesh.hpp"
 
@@ -63,6 +65,122 @@ void Mesh::clear()
 	_submesh.clear();
 	_vertex.clear();
 	_currentSubmesh=nullptr;
+}
+
+// Resolve a (possibly negative, i.e. relative) 1-based .obj index to a 0-based index.
+static long resolveObjIndex(long i,std::size_t count)
+{
+	return (i<0)?static_cast<long>(count)+i:i-1;
+}
+
+//
+bool Mesh::read(const std::string &sPath)
+{
+	std::ifstream file(sPath);
+	if(!file) return false;
+
+	clear();
+
+	std::vector<pnt3> position;
+	std::vector<vtr3> normal;
+	std::map<std::pair<long,long>,std::size_t> vertexIndex; // (position,normal) -> mesh vertex
+	bool ok=true;
+
+	auto vertexFor=[&](const std::string &token)->long
+	{
+		// token is v, v/vt, v//vn or v/vt/vn; texture index is ignored
+		long iv=0,in=0;
+		bool hasNormal=false;
+		const std::size_t s1=token.find('/');
+		iv=std::strtol(token.c_str(),nullptr,10);
+		if(s1!=std::string::npos)
+		{
+			const std::size_t s2=token.find('/',s1+1);
+			if(s2!=std::string::npos&&s2+1<token.size())
+			{
+				in=std::strtol(token.c_str()+s2+1,nullptr,10);
+				hasNormal=true;
+			}
+		}
+		const long ip=resolveObjIndex(iv,position.size());
+		if(iv==0||ip<0||ip>=static_cast<long>(position.size())) return -1;
+		long inorm=-1;
+		if(hasNormal)
+		{
+			inorm=resolveObjIndex(in,normal.size());
+			if(in==0||inorm<0||inorm>=static_cast<long>(normal.size())) return -1;
+		}
+		const auto key=std::make_pair(ip,inorm);
+		auto it=vertexIndex.find(key);
+		if(it!=vertexIndex.end()) return static_cast<long>(it->second);
+		const std::size_t index=_vertex.size();
+		_vertex.emplace_back(position[ip],hasNormal?normal[inorm]:vtr3::Z,pnt2(0.,0.));
+		vertexIndex[key]=index;
+		return static_cast<long>(index);
+	};
+
+	auto useSubmesh=[&](const std::string &name)
+	{
+		auto it=_submesh.find(name);
+		if(it==_submesh.end())
+		{
+			it=_submesh.emplace(name,new SubMesh()).first;
+		}
+		_currentSubmesh=it->second;
+	};
+
+	std::string line;
+	while(ok&&std::getline(file,line))
+	{
+		std::istringstream ss(line);
+		std::string tag;
+		ss>>tag;
+		if(tag=="v")
+		{
+			double x,y,z;
+			if(ss>>x>>y>>z) position.emplace_back(x,y,z);
+			else ok=false;
+		}
+		else if(tag=="vn")
+		{
+			double x,y,z;
+			if(ss>>x>>y>>z) normal.emplace_back(x,y,z);
+			else ok=false;
+		}
+		else if(tag=="usemtl")
+		{
+			std::string name;
+			std::getline(ss>>std::ws,name);
+			while(!name.empty()&&isspace(static_cast<unsigned char>(name.back()))) name.pop_back();
+			useSubmesh(name);
+		}
+		else if(tag=="f")
+		{
+			std::vector<long> index;
+			std::string token;
+			while(ss>>token)
+			{
+				const long i=vertexFor(token);
+				if(i<0){ok=false;break;}
+				index.push_back(i);
+			}
+			if(ok&&index.size()<3) ok=false;
+			if(!ok) break;
+			if(!_currentSubmesh) useSubmesh("default");
+			for(std::size_t k=1;k+1<index.size();++k)
+			{
+				_currentSubmesh->_tris.emplace_back(index[0],index[k],index[k+1]);
+			}
+		}
+	}
+
+	if(!ok)
+	{
+		clear();
+		return false;
+	}
+	FindRange();
+	return true;
 }
 
 // 

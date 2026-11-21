@@ -24,6 +24,9 @@ set_target_properties(${PROJECT_NAME}_tests PROPERTIES
     LINKER_LANGUAGE CXX
     FOLDER ${PROJECT_NAME})
 
+target_compile_definitions(${PROJECT_NAME}_tests
+    PRIVATE TOPOMESH_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME} gtest)
 
 # Code sign to avoid macOS permission dialogs

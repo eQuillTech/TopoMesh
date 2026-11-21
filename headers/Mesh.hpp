@@ -9,6 +9,7 @@
 #include <list>
 #include <stack>
 #include <map>
+#include <string>
 
 #include "weiss.hpp"
 #include "gfrm3.hpp"
@@ -131,6 +132,11 @@ public:
 	Mesh();
 	~Mesh();
 	void clear();
+
+	// Read a Wavefront .obj file (geometry only; textures and .mtl files are ignored).
+	// Faces with more than 3 vertices are fan-triangulated. Each "usemtl" name becomes a submesh.
+	// Returns false (leaving the mesh empty) if the file cannot be opened or parsed.
+	bool read(const std::string &sPath);
 
 	std::size_t numVertex() const{return _vertex.size();}
 	
