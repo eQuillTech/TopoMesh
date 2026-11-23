@@ -59,48 +59,6 @@ struct TriIndex
 	}
 };
 
-struct MeshRange
-{
-	pnt3 _min;
-	pnt3 _max;
-	
-	MeshRange(){init();}
-	
-	void init(){_min=pnt3(1.e12,1.e12,1.e12);_max=pnt3(-1.e12,-1.e12,-1.e12);}
-
-	pnt3 &min(){return _min;}
-	pnt3 const &min() const{return _min;}
-
-	pnt3 &max(){return _max;}
-	pnt3 const &max() const{return _max;}
-
-	double &min(const uint32_t i){return _min(i);}
-	double const &min(const uint32_t i) const{return _min(i);}
-
-	double &max(const uint32_t i){return _max(i);}
-	double const &max(const uint32_t i) const{return _max(i);}
-
-	vtr3 diag() const{return _max-_min;}
-	pnt3 center() const{return _min+0.5*diag();}
-
-	operator gfrm3() const{return gfrm3(center(),diag());}
-	double const extent(const uint32_t i) const{return _max(i)-_min(i);}
-
-	void expand(const pnt3 &P)
-	{
-		for(uint32_t i=0;i<3;++i)
-		{
-			if(P(i)<_min(i))
-			{
-				_min(i)=P(i);
-			}
-			if(P(i)>_max(i))
-			{
-				_max(i)=P(i);
-			}
-		}
-	}
-};
 
 //
 typedef std::vector<TriIndex> TriIndexVector;
@@ -123,11 +81,54 @@ public:
 struct Mesh
 {
 public:
-	MeshVertexVector _vertex;
-	MeshRange _range;
+		
+	struct Range
+	{
+		pnt3 _min;
+		pnt3 _max;
+	 
+		Range(){init();}
+	 
+		void init(){_min=pnt3(1.e12,1.e12,1.e12);_max=pnt3(-1.e12,-1.e12,-1.e12);}
+
+		pnt3 &min(){return _min;}
+		pnt3 const &min() const{return _min;}
+
+		pnt3 &max(){return _max;}
+		pnt3 const &max() const{return _max;}
+
+		double &min(const uint32_t i){return _min(i);}
+		double const &min(const uint32_t i) const{return _min(i);}
+
+		double &max(const uint32_t i){return _max(i);}
+		double const &max(const uint32_t i) const{return _max(i);}
+
+		vtr3 diag() const{return _max-_min;}
+		pnt3 center() const{return _min+0.5*diag();}
+
+		operator gfrm3() const{return gfrm3(center(),diag());}
+		double const extent(const uint32_t i) const{return _max(i)-_min(i);}
+
+		void expand(const pnt3 &P)
+		{
+		 for(uint32_t i=0;i<3;++i)
+		 {
+			 if(P(i)<_min(i))
+			 {
+				 _min(i)=P(i);
+			 }
+			 if(P(i)>_max(i))
+			 {
+				 _max(i)=P(i);
+			 }
+		 }
+		}
+		} _range;
 
 	std::map<std::string,SubMesh*> _submesh;
 	SubMesh* _currentSubmesh;
+	
+	MeshVertexVector _vertex;
 
 	Mesh();
 	~Mesh();

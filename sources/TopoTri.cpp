@@ -1683,10 +1683,10 @@ static void GetRange
 (	std::vector<float> &point_img, // (Extended) point image
 	std::vector<short> &flag_img,  // (Extended) flag image - to be modified here
 	std::size_t ext_width, std::size_t ext_height, // (Extended) image dimensions
-	MeshRange &meshRange
+	Mesh::Range &range
 )
 {
-	meshRange.init();
+	range.init();
 	std::size_t iPos(0);
 	for (uint32_t iY = 0; iY < ext_height; iY++)
 	{
@@ -1695,7 +1695,7 @@ static void GetRange
 			if ((flag_img[iPos] & data_mask))
 			{
 				pnt3 P(iX,ext_height - 1 - iY,point_img[iPos]);
-				meshRange.expand(P);
+				range.expand(P);
 			}
 			iPos++;
 		}
