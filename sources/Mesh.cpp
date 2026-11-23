@@ -179,7 +179,7 @@ bool Mesh::read(const std::string &sPath)
 		clear();
 		return false;
 	}
-	FindRange();
+	findRange();
 	return true;
 }
 
@@ -203,7 +203,7 @@ void Mesh::operator/=(const atr3 &T)
 	*this*=T.inv();
 }
 
-void Mesh::FindRange()
+void Mesh::findRange()
 {
 	_range.init();
 	for(auto &vertex:_vertex)
@@ -275,28 +275,41 @@ bool Mesh::isIn(const pnt3 &P)
 		auto sm = sp.second;
 		if(sm->numTriang() == 0) continue;
 		
-		// get vertices of first triangle
-		auto t0 = sm->_tris[0];
-		pnt3 p[3] = {std::get<0>(_vertex[t0._i]), std::get<0>(_vertex[t0._j]), std::get<0>(_vertex[t0._k])};
+		// find initial ray point Q0
+		pnt3 Q0;
+		vtr3 n; // normal
+		for (auto& t: sm->_tris)
+		{
+			pnt3 p[3] = {std::get<0>(_vertex[t._i]), std::get<0>(_vertex[t._j]), std::get<0>(_vertex[t._k])};
+			Q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.; // midpoint
+			n = (p[1] - p[0]).cross(p[2] - p[0]); // normal
+			if (n.cross(P - Q0).len() != 0.) // accept if not parallel
+			{
+				n = n.norm();
+				break;
+			}
+		}
 		
-		// find normal
-		const pnt3 q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.;
-		pnt3 q = q0;
-		vtr3 n = (p[1] - p[0]).cross(p[2] - p[0]);
-		
+		vtr3 dQ; // random increment along normal
+		pnt3 Q;
+		bool needQ = true;
 		int i = 0;
 		while (i < sm->numTriang())
 		{
-			bool colinear = false;
-			auto s = intersectSign(P, q, sm->_tris[i], colinear);
-			if (colinear) // restart
+			if (needQ)
 			{
 				nIntersect = 0.;
-				i = 0;
-				vtr3 dq = 1.e-4*(2.*rand() - 1.)*n; // random increment along normal
-				q = q0 + dq;
-			} else
+				dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
+				Q = Q0 + dQ;
+				needQ = false;
+			}
+			bool colinear = false;
+			auto s = intersectSign(P, Q, sm->_tris[i], colinear);
+			if (colinear) // restart
 			{
+				i = 0;
+				needQ = true;
+			} else {
 				nIntersect += s;
 				++i;
 			}

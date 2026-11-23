@@ -18,7 +18,8 @@ TEST(TopoMeshTest, is_in_box)
 	EXPECT_EQ(boxMesh.numVertex(), 24u);
 	
 	EXPECT_EQ(boxMesh.isIn(pnt3(150., 0., 0.)), false);
-
+	EXPECT_EQ(boxMesh.isIn(pnt3(0., 0., 0.)), false);
+	
 	EXPECT_EQ(boxMesh.isIn(pnt3(0., 50., 0.)), true);
 	EXPECT_EQ(boxMesh.isIn(pnt3(20., 80., -30.)), true);
 	EXPECT_EQ(boxMesh.isIn(pnt3(0., 150., 0.)), false);

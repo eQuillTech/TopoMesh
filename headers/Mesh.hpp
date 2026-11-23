@@ -147,7 +147,7 @@ public:
 	void operator/=(const atr3 &T);
 	
 	static bool _showData;
-	void FindRange();
+	void findRange();
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
 	
