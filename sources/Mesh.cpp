@@ -43,7 +43,7 @@ Mesh::Mesh()
 	_vertex.emplace_back(pnt3(1.,1.,0),vtr3::Z,pnt2(1.,0.));
 	_vertex.emplace_back(pnt3(-1.,1.,0),vtr3::Z,pnt2(0.,0.));
 
-	_currentSubmesh=new Sub(this);
+	_currentSubmesh=new Submesh(this);
 	_submesh["empty"]=_currentSubmesh;
 	_currentSubmesh->_tris.emplace_back(0,1,2);
 	_currentSubmesh->_tris.emplace_back(0,2,3);
@@ -121,7 +121,7 @@ bool Mesh::read(const std::string &sPath)
 		auto it=_submesh.find(name);
 		if(it==_submesh.end())
 		{
-			it=_submesh.emplace(name,new Sub(this)).first;
+			it=_submesh.emplace(name,new Submesh(this)).first;
 		}
 		_currentSubmesh=it->second;
 	};
@@ -292,7 +292,7 @@ float Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 		return mth::sgn(sv[0]);
 }
 
-float Mesh::Sub::crossings(const pnt3 &P)
+float Mesh::Submesh::crossings(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
 	if(numTriang() == 0) return 0;

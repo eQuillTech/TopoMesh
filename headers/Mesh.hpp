@@ -112,7 +112,7 @@ public:
 		}
 	} _range;
 	
-	struct Sub
+	struct Submesh
 	{
 	private:
 		Mesh* _mesh;
@@ -121,7 +121,7 @@ public:
 		TriIndexVector _tris;
 		atr3 _T;
 
-		Sub(Mesh* m) { _mesh = m; }
+		Submesh(Mesh* m) { _mesh = m; }
 		std::size_t numTriang() const{return _tris.size();}
 
 		void operator*=(const atr3 &T){_T*=T;}
@@ -132,8 +132,8 @@ public:
 		float crossings(const pnt3 &P);
 	};
 	
-	std::map<std::string,Sub*> _submesh;
-	Sub* _currentSubmesh;
+	std::map<std::string,Submesh*> _submesh;
+	Submesh* _currentSubmesh;
 	
 	MeshVertexVector _vertex;
 
