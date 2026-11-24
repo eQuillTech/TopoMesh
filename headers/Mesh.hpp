@@ -63,19 +63,6 @@ struct TriIndex
 //
 typedef std::vector<TriIndex> TriIndexVector;
 
-//
-struct SubMesh
-{
-public:
- 	TriIndexVector _tris;	
-	atr3 _T;
-	
-	std::size_t numTriang() const{return _tris.size();}
-	
-	void operator*=(const atr3 &T){_T*=T;}
-	void operator/=(const atr3 &T){_T/=T;}
-	
-};
 
 //
 struct Mesh
@@ -123,10 +110,30 @@ public:
 			 }
 		 }
 		}
-		} _range;
+	} _range;
+	
+	struct Sub
+	{
+	private:
+		Mesh* _mesh;
+		
+	public:
+		TriIndexVector _tris;
+		atr3 _T;
 
-	std::map<std::string,SubMesh*> _submesh;
-	SubMesh* _currentSubmesh;
+		Sub(Mesh* m) { _mesh = m; }
+		std::size_t numTriang() const{return _tris.size();}
+
+		void operator*=(const atr3 &T){_T*=T;}
+		void operator/=(const atr3 &T){_T/=T;}
+
+		std::vector<TriIndexVector> _BVH = {}; // bounding volume hierarchy
+		
+		float crossings(const pnt3 &P);
+	};
+	
+	std::map<std::string,Sub*> _submesh;
+	Sub* _currentSubmesh;
 	
 	MeshVertexVector _vertex;
 
@@ -149,13 +156,14 @@ public:
 	
 	static bool _showData;
 	void findRange();
+	void findBVH();
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
 	
-	float intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear);
+	float crossings(pnt3 p, pnt3 q, TriIndex t, bool &colinear);
 
 	bool isIn(const pnt3 &P);
 
 };
 
-#endif
+#endif // !_MESH_
