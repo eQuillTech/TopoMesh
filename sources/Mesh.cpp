@@ -381,7 +381,7 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 	// Ray penetrates box; check triangles
 	for (auto& tri: _submesh->_tris)
 	{
-			s += _submesh->crossings(P, Q, colinear);
+		s += _submesh->_mesh->crossings(P, Q, tri, colinear);
 	}
 
 	for (auto& sz: _subzones)
@@ -445,7 +445,7 @@ void Mesh::Submesh::Zone::insert(int iTri)
 			auto& C = _range._min;
 			vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
 
-			bool first;
+			bool first = true;
 			int iZone = 0; // invalid
 			for (int m = 0; m < 3; ++m)
 			{
@@ -466,8 +466,8 @@ void Mesh::Submesh::Zone::insert(int iTri)
 			}
 			if (!_subzones[iZone])
 			{
-				int i = iZone>>2;
-				int j = (iZone - 2*i)>>1;
+				int i = iZone/4;
+				int j = (iZone - 4*i)/2;
 				int k = iZone - 4*i - 2*j;
 				auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
 				_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);

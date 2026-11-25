@@ -60,17 +60,30 @@ TEST(TopoMeshTest, is_in_boxhole_BVH)
 
 }
 
+TEST(TopoMeshTest, is_in_torus)
+{
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sTorus));
+	
+	EXPECT_EQ(mesh.numVertex(), 8192u);
+
+	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 50.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+
+}
+
 TEST(TopoMeshTest, is_in_torus_BVH)
 {
 	Mesh mesh;
-
 	ASSERT_TRUE(mesh.read(sTorus));
 	mesh.buildZones();
 	
-	EXPECT_EQ(mesh.numVertex(), 8192u);
-	
 	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
-
 	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
 	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
 	EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
