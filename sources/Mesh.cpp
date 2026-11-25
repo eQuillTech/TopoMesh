@@ -444,8 +444,9 @@ void Mesh::Submesh::Zone::insert(int iTri)
 	}
 
 	if (allIn) {
-
 		vtr3 subDiag = _range.diag()/2;
+		
+		// reject if triangle is somewhat
 		if (subDiag.len() > Zone::minDiag) // preset resolution
 		{
 			auto& C = _range._min;
@@ -466,7 +467,7 @@ void Mesh::Submesh::Zone::insert(int iTri)
 				else if (iZone != 4*i + 2*j + k) // split across subzones
 				{
 					_iTris.push_back(iTri); // insert in this zone
-					++_nTrisEnclosed;
+
 					return;
 				}
 			}
@@ -479,7 +480,6 @@ void Mesh::Submesh::Zone::insert(int iTri)
 				_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
 			}
 			_subzones[iZone]->insert(iTri);
-			++_nTrisEnclosed; // track in parent zone
 		}
 	}
 }

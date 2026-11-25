@@ -123,7 +123,6 @@ public:
 			Range _range;
 			std::vector<int> _iTris{}; // indices of enclosed triangles
 			Zone* _subzones[8]{};
-			int _nTrisEnclosed = 0; // including subzones
 			Submesh* _submesh;
 			
 			inline static double minDiag = 1.e-2; // resolution
