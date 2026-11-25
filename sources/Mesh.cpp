@@ -348,6 +348,7 @@ float Mesh::Submesh::crossings(const pnt3 &P, pnt3 Q, bool &colinear)
 	return nCrossings;
 }
 
+// Count ray crossings
 float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 {
 	float s = 0;
@@ -404,7 +405,7 @@ bool Mesh::isIn(const pnt3 &P)
 
 
 // bounding-volume hierarchy (in progress)
-void Mesh::Submesh::buildBVH()
+void Mesh::Submesh::buildZones()
 {
 	_zone = new Submesh::Zone(_mesh->_range, this);
 	for (int i = 0; i < _tris.size(); ++i)
@@ -413,12 +414,12 @@ void Mesh::Submesh::buildBVH()
 	}
 }
 
-// bounding-volume hierarchy (in progress)
-void Mesh::buildBVH()
+// bounding-volume hierarchy
+void Mesh::buildZones()
 {
 	for (auto sm: _submesh)
 	{
-		sm.second->buildBVH();
+		sm.second->buildZones();
 	}
 }
 
@@ -448,9 +449,9 @@ void Mesh::Submesh::Zone::insert(int iTri)
 			int iZone = 0; // invalid
 			for (int m = 0; m < 3; ++m)
 			{
-				int i = floor(2*r[m](0)/_range.diag()(0));
-				int j = floor(2*r[m](1)/_range.diag()(1));
-				int k = floor(2*r[m](2)/_range.diag()(2));
+				int i = floor(2.0*r[m](0)/_range.diag()(0));
+				int j = floor(2.0*r[m](1)/_range.diag()(1));
+				int k = floor(2.0*r[m](2)/_range.diag()(2));
 				if (first)
 				{
 					iZone = 4*i + 2*j + k;

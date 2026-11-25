@@ -147,7 +147,7 @@ public:
 		void operator*=(const atr3 &T){_T*=T;}
 		void operator/=(const atr3 &T){_T/=T;}
 
-		void buildBVH();
+		void buildZones();
 		
 		float crossings(const pnt3 &P);
 		float crossings(const pnt3 &P, pnt3 Q, bool &colinear);
@@ -177,7 +177,7 @@ public:
 	
 	static bool _showData;
 	void findRange();
-	void buildBVH();
+	void buildZones();
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
 	

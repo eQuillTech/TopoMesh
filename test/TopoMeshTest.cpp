@@ -5,42 +5,75 @@
 
 const std::string sBox = std::string(TOPOMESH_TEST_DATA_DIR) + "/Box/Box.obj";
 const std::string sBoxHole = std::string(TOPOMESH_TEST_DATA_DIR) + "/BoxHole/BoxHole.obj";
+const std::string sTorus = std::string(TOPOMESH_TEST_DATA_DIR) + "/Torus/Torus.obj";
 
 /*
  * TopoMesh tests
  */
-TEST(TopoMeshTest, is_in_box)
+TEST(TopoMeshTest, is_in_box_BVH)
 {
-	//read file sBox
-	Mesh boxMesh;
-
-	ASSERT_TRUE(boxMesh.read(sBox));
-	boxMesh.buildBVH();
-	EXPECT_EQ(boxMesh.numVertex(), 24u);
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sBox));
 	
-	EXPECT_EQ(boxMesh.isIn(pnt3(150., 0., 0.)), false);
-	EXPECT_EQ(boxMesh.isIn(pnt3(0., 0., 0.)), false);
+	EXPECT_EQ(mesh.numVertex(), 24u);
 	
-	EXPECT_EQ(boxMesh.isIn(pnt3(0., 50., 0.)), true);
-	EXPECT_EQ(boxMesh.isIn(pnt3(20., 80., -30.)), true);
-	EXPECT_EQ(boxMesh.isIn(pnt3(0., 150., 0.)), false);
-	EXPECT_EQ(boxMesh.isIn(pnt3(0., -10., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 0., 0.)), false);
+	
+	EXPECT_EQ(mesh.isIn(pnt3(0., 50., 0.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(20., 80., -30.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
 
 }
 
 TEST(TopoMeshTest, is_in_boxhole)
 {
-	//read file sBoxHole
-	Mesh boxMesh;
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sBoxHole));
 
-	ASSERT_TRUE(boxMesh.read(sBoxHole));
-	EXPECT_EQ(boxMesh.numVertex(), 80u);
+	EXPECT_EQ(mesh.numVertex(), 80u);
 	
-	EXPECT_EQ(boxMesh.isIn(pnt3(150., 0., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
 
-	EXPECT_EQ(boxMesh.isIn(pnt3(50., 50., 50.)), false);
-	EXPECT_EQ(boxMesh.isIn(pnt3(20., 80., -30.)), true);
-	EXPECT_EQ(boxMesh.isIn(pnt3(0., 150., 0.)), false);
-	EXPECT_EQ(boxMesh.isIn(pnt3(0., -10., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(20., 80., -30.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+
+}
+
+TEST(TopoMeshTest, is_in_boxhole_BVH)
+{
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sBoxHole));
+	mesh.buildZones();
+	
+	EXPECT_EQ(mesh.numVertex(), 80u);
+	
+	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
+
+	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(20., 80., -30.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+
+}
+
+TEST(TopoMeshTest, is_in_torus_BVH)
+{
+	Mesh mesh;
+
+	ASSERT_TRUE(mesh.read(sTorus));
+	mesh.buildZones();
+	
+	EXPECT_EQ(mesh.numVertex(), 8192u);
+	
+	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
+
+	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 50., 20.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
 
 }
