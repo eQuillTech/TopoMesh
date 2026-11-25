@@ -72,7 +72,9 @@ TEST(TopoMeshTest, is_in_torus_BVH)
 	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
 
 	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(0., 50., 20.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
+	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 50.)), false);
 	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
 	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
 
