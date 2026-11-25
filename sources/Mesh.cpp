@@ -442,50 +442,46 @@ void Mesh::Submesh::Zone::insert(int iTri)
 		V[i] = std::get<0>(verts[iVertex]);
 		allIn &= _range.isIn(V[i]);// in zone volume
 	}
-
-	if (allIn) {
-		vtr3 subDiag = _range.diag()/2;
+	
+	vtr3 subDiag = _range.diag()/2;
+	if (allIn && subDiag.len() > Zone::minDiag) // preset resolution
+	{
+		auto& C = _range._min;
+		vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
 		
-		// reject if triangle is somewhat
-		if (subDiag.len() > Zone::minDiag) // preset resolution
+		bool first = true;
+		int iZone = 0; // invalid
+		for (int m = 0; m < 3; ++m)
 		{
-			auto& C = _range._min;
-			vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
-
-			bool first = true;
-			int iZone = 0; // invalid
-			for (int m = 0; m < 3; ++m)
+			int i = 2.*r[m](0)/_range.diag()(0) > 1. ? 1 : 0;
+			int j = 2.*r[m](1)/_range.diag()(1) > 1. ? 1 : 0;
+			int k = 2.*r[m](2)/_range.diag()(2) > 1. ? 1 : 0;
+			if (first)
 			{
-				int i = 2.*r[m](0)/_range.diag()(0) > 1. ? 1 : 0;
-				int j = 2.*r[m](1)/_range.diag()(1) > 1. ? 1 : 0;
-				int k = 2.*r[m](2)/_range.diag()(2) > 1. ? 1 : 0;
-				if (first)
-				{
-					iZone = 4*i + 2*j + k;
-					first = false;
-				}
-				else if (iZone != 4*i + 2*j + k) // split across subzones
-				{
-					_iTris.push_back(iTri); // insert in this zone
-
-					return;
-				}
+				iZone = 4*i + 2*j + k;
+				first = false;
 			}
-			if (!_subzones[iZone])
+			else if (iZone != 4*i + 2*j + k) // split across subzones
 			{
-				int i = iZone/4;
-				int j = (iZone - 4*i)/2;
-				int k = iZone - 4*i - 2*j;
-				auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
-				_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
+				_iTris.push_back(iTri); // insert in this zone
+				return;
 			}
-			_subzones[iZone]->insert(iTri);
 		}
-		else
+		if (!_subzones[iZone])
 		{
-			_iTris.push_back(iTri);
+			int i = iZone/4;
+			int j = (iZone - 4*i)/2;
+			int k = iZone - 4*i - 2*j;
+			auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
+			_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
 		}
+		_subzones[iZone]->insert(iTri);
 	}
+	else
+	{
+		_iTris.push_back(iTri);
+	}
+	
 }
 
 
