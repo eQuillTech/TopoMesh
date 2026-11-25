@@ -147,11 +147,10 @@ public:
 		void operator*=(const atr3 &T){_T*=T;}
 		void operator/=(const atr3 &T){_T/=T;}
 
-		std::vector<TriIndexVector> _BVH = {}; // bounding volume hierarchy
-		int depthBVH = 0;
 		void buildBVH();
 		
 		float crossings(const pnt3 &P);
+		float crossings(const pnt3 &P, pnt3 Q, bool &colinear);
 	};
 	
 	std::map<std::string,Submesh*> _submesh;

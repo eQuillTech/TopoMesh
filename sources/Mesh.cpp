@@ -184,7 +184,6 @@ bool Mesh::read(const std::string &sPath)
 		return false;
 	}
 	findRange();
-	buildBVH();
 	return true;
 }
  
@@ -335,12 +334,27 @@ float Mesh::Submesh::crossings(const pnt3 &P)
 	return nCrossings != 0.;
 }
 
+// Count ray crossings
+float Mesh::Submesh::crossings(const pnt3 &P, pnt3 Q, bool &colinear)
+{
+	double nCrossings = 0; // initialize
+	
+	int i = 0;
+	for (auto& tri: _tris )
+	{
+		nCrossings += _mesh->crossings(P, Q, tri, colinear);
+		if (colinear) return 0;
+	}
+	return nCrossings;
+}
+
 float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 {
 	float s = 0;
 	vtr3 d = Q - P;
 	auto& C = _range.min();
 	auto diag = _range.diag();
+	bool intersects = false;
 	for (int i = 0; i < 3; ++i)
 	{
 		if (abs(d(i)) < 1.e-9) continue;// parallel to box
@@ -352,16 +366,21 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 			int j = (i + dj)%3;
 			for (int k = 0; k < 2; ++k)
 			{
-				if (D[k](j) < x[k] || D[k](j) > x[k] )
-					return 0; // misses box
+				if (D[k](j) >= x[k] && D[k](j) <= x[k] )
+				{
+					intersects = true;
+					break;
+				}
 			}
+			if (intersects) break;
 		}
 	}
-	
+	if (!intersects) return 0; // misses box
+
 	// Ray penetrates box; check triangles
 	for (auto& tri: _submesh->_tris)
 	{
-			s += _submesh->crossings(P);
+			s += _submesh->crossings(P, Q, colinear);
 	}
 
 	for (auto& sz: _subzones)

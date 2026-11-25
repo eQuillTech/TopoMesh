@@ -15,6 +15,7 @@ TEST(TopoMeshTest, is_in_box)
 	Mesh boxMesh;
 
 	ASSERT_TRUE(boxMesh.read(sBox));
+	boxMesh.buildBVH();
 	EXPECT_EQ(boxMesh.numVertex(), 24u);
 	
 	EXPECT_EQ(boxMesh.isIn(pnt3(150., 0., 0.)), false);
