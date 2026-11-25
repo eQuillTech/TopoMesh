@@ -128,6 +128,7 @@ public:
 			inline static double minDiag = 1.e-4; // resolution
 			
 			Zone(Range range, Submesh* submesh):_range(range), _submesh(submesh){}
+			~Zone();
 			
 			void insert(int iTri);			
 			float crossings(pnt3 P);// top-level call
@@ -142,6 +143,7 @@ public:
 		atr3 _T;
 
 		Submesh(Mesh* m) { _mesh = m; }
+		~Submesh();
 		std::size_t numTriang() const{return _tris.size();}
 
 		void operator*=(const atr3 &T){_T*=T;}

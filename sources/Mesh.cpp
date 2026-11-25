@@ -271,6 +271,11 @@ float Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 		return mth::sgn(sv[0]);
 }
 
+Mesh::Submesh::~Submesh()
+{
+	delete(_zone);
+}
+
 // Count ray crossings w/o BVH
 float Mesh::Submesh::crossings(const pnt3 &P)
 {
@@ -346,6 +351,14 @@ float Mesh::Submesh::crossings(const pnt3 &P, pnt3 Q, bool &colinear)
 		if (colinear) return 0;
 	}
 	return nCrossings;
+}
+
+Mesh::Submesh::Zone::~Zone()
+{
+	for(auto sz: _subzones)
+	{
+		delete(sz);
+	}
 }
 
 // Count ray crossings
