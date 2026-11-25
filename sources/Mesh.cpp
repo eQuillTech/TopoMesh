@@ -456,9 +456,9 @@ void Mesh::Submesh::Zone::insert(int iTri)
 			int iZone = 0; // invalid
 			for (int m = 0; m < 3; ++m)
 			{
-				int i = floor(2.0*r[m](0)/_range.diag()(0));
-				int j = floor(2.0*r[m](1)/_range.diag()(1));
-				int k = floor(2.0*r[m](2)/_range.diag()(2));
+				int i = 2.*r[m](0)/_range.diag()(0) > 1. ? 1 : 0;
+				int j = 2.*r[m](1)/_range.diag()(1) > 1. ? 1 : 0;
+				int k = 2.*r[m](2)/_range.diag()(2) > 1. ? 1 : 0;
 				if (first)
 				{
 					iZone = 4*i + 2*j + k;
