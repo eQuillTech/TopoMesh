@@ -36,6 +36,13 @@ std::size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex 
 	return index;
 }
 
+bool Mesh::Range::isIn(const pnt3 &P)
+{
+	vtr3 d = _max - _min;
+	ags3 box(bas3(d(0)*vtr3::X, d(1)*vtr3::Y, d(2)*vtr3::Z), _min);
+	return box.isIn(P);
+}
+
 Mesh::Mesh()
 {
 	_vertex.emplace_back(pnt3(-1.,-1.,0),vtr3::Z,pnt2(0.,1.));
@@ -177,6 +184,7 @@ bool Mesh::read(const std::string &sPath)
 		return false;
 	}
 	findRange();
+	buildBVH();
 	return true;
 }
  
@@ -206,34 +214,6 @@ void Mesh::findRange()
 	{
 		_range.expand(std::get<0>(vertex));
 	}
-}
-
-// bounding-volume hierarchy (in progress)
-void Mesh::findBVH()
-{
-	auto diag = _range.diag();
-	auto vol = 1.;
-	for(int i = 0; i < 3; ++i)
-	{
-		auto d = abs(diag(0));
-		vol *= d;
-	}
-	if(vol==0.) return;
-	double alpha = mth::pwr(numVertex()/vol, 1./3.);
-	/*
-	int nLevels = numVertex()
-	int nRangesX=mth::logy(diag(0)/minSize,2);
-	int nRangesY=mth::logy(diag(1)/minSize,2);
-	int nRangesZ=mth::logy(diag(2)/minSize,2);
-	for(auto& sm:_submesh)
-	{
-		sm.second->_BVH = {};
-		for(auto& t:sm.second->_tris)
-		{
-		}
-		
-	}
-	 */
 }
 
 
@@ -341,6 +321,42 @@ float Mesh::Submesh::crossings(const pnt3 &P)
 	return nCrossings != 0.;
 }
 
+float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
+{
+	float s = 0;
+	vtr3 d = Q - P;
+	auto& C = _range.min();
+	auto diag = _range.diag();
+	for (int i = 0; i < 3; ++i)
+	{
+		if (abs(d(i)) < 1.e-9) continue;// parallel to box
+		double x[2] = {C(i), C(i) + diag(i)};
+		double t[2] = {(x[0] - P(i))/d(i), (x[1] - P(i))/d(i)};
+		pnt3 D[2] = {P + t[0]*d, P + t[1]*d}; // ray intersection with plane
+		for (int dj = 0; dj < 2; ++dj)
+		{
+			int j = (i + dj)%3;
+			for (int k = 0; k < 2; ++k)
+			{
+				if (D[k](j) < x[k] || D[k](j) > x[k] )
+					return 0; // misses box
+			}
+		}
+	}
+	
+	// Ray penetrates box; check triangles
+	for (auto& tri: _submesh->_tris)
+	{
+			s += _submesh->crossings(P);
+	}
+
+	for (auto& sz: _subzones)
+	{
+		if (sz) s += sz->crossings(P, Q, colinear);
+	}
+	return s;
+}
+
 //
 bool Mesh::isIn(const pnt3 &P)
 {
@@ -351,4 +367,80 @@ bool Mesh::isIn(const pnt3 &P)
 	}
 	return nCrossings != 0.;
 }
+
+
+// bounding-volume hierarchy (in progress)
+void Mesh::Submesh::buildBVH()
+{
+	_zone = new Submesh::Zone(_mesh->_range, this);
+	for (int i = 0; i < _tris.size(); ++i)
+	{
+		_zone->insert(i);
+	}
+}
+
+// bounding-volume hierarchy (in progress)
+void Mesh::buildBVH()
+{
+	for (auto sm: _submesh)
+	{
+		sm.second->buildBVH();
+	}
+}
+
+
+void Mesh::Submesh::Zone::insert(int iTri)
+{
+	bool allIn = true;
+	auto& tri = _submesh->_tris[iTri];
+	const auto& verts = _submesh->_mesh->_vertex;
+	pnt3 V[3]{};
+	for(int i = 0; i < 3; ++i)
+	{
+		auto& iVertex = tri._p[i]; // vertex indices
+		V[i] = std::get<0>(verts[iVertex]);
+		allIn &= _range.isIn(V[i]);// in zone volume
+	}
+
+	if (allIn) {
+
+		vtr3 subDiag = _range.diag()/2;
+		if (subDiag.len() > Zone::minDiag) // preset resolution
+		{
+			auto& C = _range._min;
+			vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
+
+			bool first;
+			int iZone = 0; // invalid
+			for (int m = 0; m < 3; ++m)
+			{
+				int i = floor(2*r[m](0)/_range.diag()(0));
+				int j = floor(2*r[m](1)/_range.diag()(1));
+				int k = floor(2*r[m](2)/_range.diag()(2));
+				if (first)
+				{
+					iZone = 4*i + 2*j + k;
+					first = false;
+				}
+				else if (iZone != 4*i + 2*j + k) // split across subzones
+				{
+					_iTris.push_back(iTri); // insert in this zone
+					++_nTrisEnclosed;
+					return;
+				}
+			}
+			if (!_subzones[iZone])
+			{
+				int i = iZone>>2;
+				int j = (iZone - 2*i)>>1;
+				int k = iZone - 4*i - 2*j;
+				auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
+				_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
+			}
+			_subzones[iZone]->insert(iTri);
+			++_nTrisEnclosed; // track in parent zone
+		}
+	}
+}
+
 

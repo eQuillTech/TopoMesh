@@ -75,7 +75,7 @@ public:
 		pnt3 _max;
 	 
 		Range(){init();}
-	 
+		Range(const pnt3& C, const vtr3& diag):_min(C), _max(C + diag) {}
 		void init(){_min=pnt3(1.e12,1.e12,1.e12);_max=pnt3(-1.e12,-1.e12,-1.e12);}
 
 		pnt3 &min(){return _min;}
@@ -96,6 +96,8 @@ public:
 		operator gfrm3() const{return gfrm3(center(),diag());}
 		double const extent(const uint32_t i) const{return _max(i)-_min(i);}
 
+		bool isIn(const pnt3 &P);
+		
 		void expand(const pnt3 &P)
 		{
 		 for(uint32_t i=0;i<3;++i)
@@ -114,6 +116,23 @@ public:
 	
 	struct Submesh
 	{
+	public:
+		struct Zone
+		{
+			Range _range;
+			std::vector<int> _iTris{}; // indices of enclosed triangles
+			Zone* _subzones[8]{};
+			int _nTrisEnclosed = 0; // including subzones
+			Submesh* _submesh;
+			
+			inline static double minDiag = 1.e-4; // resolution
+			
+			Zone(Range range, Submesh* submesh):_range(range), _submesh(submesh){}
+			
+			void insert(int iTri);			
+			float crossings(pnt3 P, pnt3 Q, bool &colinear);
+		} *_zone;
+		
 	private:
 		Mesh* _mesh;
 		
@@ -128,6 +147,8 @@ public:
 		void operator/=(const atr3 &T){_T/=T;}
 
 		std::vector<TriIndexVector> _BVH = {}; // bounding volume hierarchy
+		int depthBVH = 0;
+		void buildBVH();
 		
 		float crossings(const pnt3 &P);
 	};
@@ -156,11 +177,11 @@ public:
 	
 	static bool _showData;
 	void findRange();
-	void findBVH();
+	void buildBVH();
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
 	
-	float crossings(pnt3 p, pnt3 q, TriIndex t, bool &colinear);
+	float crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear);
 
 	bool isIn(const pnt3 &P);
 
