@@ -130,6 +130,7 @@ public:
 			Zone(Range range, Submesh* submesh):_range(range), _submesh(submesh){}
 			
 			void insert(int iTri);			
+			float crossings(pnt3 P);// top-level call
 			float crossings(pnt3 P, pnt3 Q, bool &colinear);
 		} *_zone;
 		

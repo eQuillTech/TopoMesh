@@ -272,6 +272,7 @@ float Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 		return mth::sgn(sv[0]);
 }
 
+// Count ray crossings w/o BVH
 float Mesh::Submesh::crossings(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
@@ -293,11 +294,10 @@ float Mesh::Submesh::crossings(const pnt3 &P)
 		}
 	}
 	
-	vtr3 dQ; // random increment along normal
+	vtr3 dQ; // increment along normal
 	pnt3 Q;
 	bool needQ = true;
-	int i = 0;
-	while (i < numTriang())
+	if (_zone) // use BVH
 	{
 		if (needQ)
 		{
@@ -307,17 +307,31 @@ float Mesh::Submesh::crossings(const pnt3 &P)
 			needQ = false;
 		}
 		bool colinear = false;
-		auto s = _mesh->crossings(P, Q, _tris[i], colinear);
-		if (colinear) // restart
+		nCrossings = _zone->crossings(P, Q, colinear);
+	} else // linear sum
+	{
+		int i = 0;
+		while (i < numTriang())
 		{
-			i = 0;
-			needQ = true;
-		} else {
-			nCrossings += s;
-			++i;
+			if (needQ)
+			{
+				nCrossings = 0.;
+				dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
+				Q = Q0 + dQ;
+				needQ = false;
+			}
+			bool colinear = false;
+			auto s = _mesh->crossings(P, Q, _tris[i], colinear);
+			if (colinear) // restart
+			{
+				i = 0;
+				needQ = true;
+			} else {
+				nCrossings += s;
+				++i;
+			}
 		}
 	}
-
 	return nCrossings != 0.;
 }
 
@@ -353,6 +367,7 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 	for (auto& sz: _subzones)
 	{
 		if (sz) s += sz->crossings(P, Q, colinear);
+		if (colinear) return 0;
 	}
 	return s;
 }
@@ -361,9 +376,9 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 bool Mesh::isIn(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
-	for(auto& sp: _submesh)
+	for(auto& sm: _submesh)
 	{
-		nCrossings += sp.second->crossings(P);
+		nCrossings += sm.second->crossings(P);
 	}
 	return nCrossings != 0.;
 }
