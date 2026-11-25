@@ -12,7 +12,6 @@
 
 bool Mesh::_showData(false);
 
-
 //find the WFTIndex in the vector, or push it to the back if not found. Return its vector index.
 std::size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex &wftIndex)
 {
@@ -37,7 +36,13 @@ std::size_t findIndexOrPushVertex(WFTIndexVector &wftIndexVector,const WFTIndex 
 	return index;
 }
 
-//
+bool Mesh::Range::isIn(const pnt3 &P)
+{
+	vtr3 d = _max - _min;
+	ags3 box(bas3(d(0)*vtr3::X, d(1)*vtr3::Y, d(2)*vtr3::Z), _min);
+	return box.isIn(P);
+}
+
 Mesh::Mesh()
 {
 	_vertex.emplace_back(pnt3(-1.,-1.,0),vtr3::Z,pnt2(0.,1.));
@@ -45,13 +50,12 @@ Mesh::Mesh()
 	_vertex.emplace_back(pnt3(1.,1.,0),vtr3::Z,pnt2(1.,0.));
 	_vertex.emplace_back(pnt3(-1.,1.,0),vtr3::Z,pnt2(0.,0.));
 
-	_currentSubmesh=new SubMesh();
+	_currentSubmesh=new Submesh(this);
 	_submesh["empty"]=_currentSubmesh;
 	_currentSubmesh->_tris.emplace_back(0,1,2);
 	_currentSubmesh->_tris.emplace_back(0,2,3);
 }
 
-//
 Mesh::~Mesh()
 {
 	clear();
@@ -124,7 +128,7 @@ bool Mesh::read(const std::string &sPath)
 		auto it=_submesh.find(name);
 		if(it==_submesh.end())
 		{
-			it=_submesh.emplace(name,new SubMesh()).first;
+			it=_submesh.emplace(name,new Submesh(this)).first;
 		}
 		_currentSubmesh=it->second;
 	};
@@ -182,8 +186,7 @@ bool Mesh::read(const std::string &sPath)
 	findRange();
 	return true;
 }
-
-// 
+ 
 void Mesh::operator*=(const atr3 &T)
 {
 	for(auto &vertex:_vertex)
@@ -212,24 +215,25 @@ void Mesh::findRange()
 	}
 }
 
+
 // Determine sign +/-1 for edges, +/-0.5 if crossing, 0 if colinear
-float Mesh::intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear)
+double Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 {
 		colinear = false;
-		vtr3 pq = p - q;
+		vtr3 d = Q - P;
 		
 		pnt3 pt[3];
 		for(int i=0;i<3;++i)
 		{
 			pt[i] = std::get<0>(_vertex[t._p[i]]);
 		}
-		vtr3 vt[3] = {p - pt[0], p - pt[1], p - pt[2]};
+		vtr3 vt[3] = {P - pt[0], P - pt[1], P - pt[2]};
 	
 		// get signed volumes
 		double sv[3] = {
-			pq.dot(vt[1].cross(vt[2])),
-			pq.dot(vt[2].cross(vt[0])),
-			pq.dot(vt[0].cross(vt[1]))
+			d.dot(vt[1].cross(vt[2])),
+			d.dot(vt[2].cross(vt[0])),
+			d.dot(vt[0].cross(vt[1]))
 		};
 
 		// count signs
@@ -250,8 +254,8 @@ float Mesh::intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear)
 		// check if in forward direction
 		vtr3 n = (pt[1] - pt[0]).cross(pt[2] - pt[0]);
 		vtr3 rc = pt[2] - pnt3::origin;
-		double d = n.dot(rc);
-		double f = (d - n.dot(p - pnt3::origin))/n.dot(pq);
+		double g = n.dot(rc);
+		double f = (g - n.dot(P - pnt3::origin))/n.dot(d);
 		if (f <= 0.) return 0.; // opposite ray
 				
 		if (nInter > 1)
@@ -267,54 +271,217 @@ float Mesh::intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear)
 		return mth::sgn(sv[0]);
 }
 
-bool Mesh::isIn(const pnt3 &P)
+Mesh::Submesh::~Submesh()
 {
-	double nIntersect = 0; // initialize
-	for(auto& sp: _submesh)
+	delete(_zone);
+}
+
+// Count ray crossings w/o BVH
+double Mesh::Submesh::crossings(const pnt3 &P)
+{
+	double nCrossings = 0; // initialize
+	if(numTriang() == 0) return 0;
+	
+	// find initial ray point Q0
+	pnt3 Q0;
+	vtr3 n; // normal
+	for (auto& t: _tris)
 	{
-		auto sm = sp.second;
-		if(sm->numTriang() == 0) continue;
+		pnt3 p[3] = {std::get<0>(_mesh->_vertex[t._i]), std::get<0>(_mesh->_vertex[t._j]), std::get<0>(_mesh->_vertex[t._k])};
 		
-		// find initial ray point Q0
-		pnt3 Q0;
-		vtr3 n; // normal
-		for (auto& t: sm->_tris)
+		Q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.; // midpoint
+		n = (p[1] - p[0]).cross(p[2] - p[0]); // normal
+		if (n.cross(Q0 - P).len() != 0.) // accept if not parallel
 		{
-			pnt3 p[3] = {std::get<0>(_vertex[t._i]), std::get<0>(_vertex[t._j]), std::get<0>(_vertex[t._k])};
-			Q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.; // midpoint
-			n = (p[1] - p[0]).cross(p[2] - p[0]); // normal
-			if (n.cross(P - Q0).len() != 0.) // accept if not parallel
-			{
-				n = n.norm();
-				break;
-			}
+			n = n.norm();
+			break;
 		}
-		
-		vtr3 dQ; // random increment along normal
-		pnt3 Q;
-		bool needQ = true;
+	}
+	
+	vtr3 dQ; // increment along normal
+	pnt3 Q;
+	bool needQ = true;
+	if (_zone) // use BVH
+	{
+		if (needQ)
+		{
+			nCrossings = 0.;
+			dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
+			Q = Q0 + dQ;
+			needQ = false;
+		}
+		bool colinear = false;
+		nCrossings = _zone->crossings(P, Q, colinear);
+	} else // linear sum
+	{
 		int i = 0;
-		while (i < sm->numTriang())
+		while (i < numTriang())
 		{
 			if (needQ)
 			{
-				nIntersect = 0.;
+				nCrossings = 0.;
 				dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
 				Q = Q0 + dQ;
 				needQ = false;
 			}
 			bool colinear = false;
-			auto s = intersectSign(P, Q, sm->_tris[i], colinear);
+			auto s = _mesh->crossings(P, Q, _tris[i], colinear);
 			if (colinear) // restart
 			{
 				i = 0;
 				needQ = true;
 			} else {
-				nIntersect += s;
+				nCrossings += s;
 				++i;
 			}
 		}
 	}
-	return nIntersect != 0.;
+	return nCrossings != 0.;
 }
+
+// Count ray crossings
+double Mesh::Submesh::crossings(const pnt3 &P, pnt3 Q, bool &colinear)
+{
+	double nCrossings = 0; // initialize
+	
+	int i = 0;
+	for (auto& tri: _tris )
+	{
+		nCrossings += _mesh->crossings(P, Q, tri, colinear);
+		if (colinear) return 0;
+	}
+	return nCrossings;
+}
+
+Mesh::Submesh::Zone::~Zone()
+{
+	for(auto sz: _subzones)
+	{
+		delete(sz);
+	}
+}
+
+// Count ray crossings
+double Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
+{
+	double s = 0;
+	vtr3 d = Q - P;
+	auto& C = _range.min();
+	auto diag = _range.diag();
+	double tLim[2] = {0, std::numeric_limits<double>::infinity()};
+	for (int i = 0; i < 3; ++i)
+	{
+		double x[2] = {C(i), C(i) + diag(i)};
+		if (abs(d(i)) < 1.e-12) // parallel
+		{
+			if (P(i) < x[0] || P(i) > x[1]) { return 0; } // outside
+			continue;
+		}
+		double t[2] = {(x[0] - P(i))/d(i), (x[1] - P(i))/d(i)};
+		if (t[0] > t[1]) std::swap(t[0], t[1]);
+		tLim[0] = fmax(tLim[0], t[0]);
+		tLim[1] = fmin(tLim[1], t[1]);
+		if (tLim[0] > tLim[1]) { return 0; } // misses box
+	}
+
+	// Ray penetrates box; check triangles
+	for (int iTri: _iTris)
+	{
+		s += _submesh->_mesh->crossings(P, Q, _submesh->_tris[iTri], colinear);
+		if (colinear) return 0;
+	}
+
+	for (auto& sz: _subzones)
+	{
+		if (sz) s += sz->crossings(P, Q, colinear);
+		if (colinear) return 0;
+	}
+	return s;
+}
+
+bool Mesh::isIn(const pnt3 &P)
+{
+	double nCrossings = 0; // initialize
+	for(auto& sm: _submesh)
+	{
+		nCrossings += sm.second->crossings(P);
+	}
+	return nCrossings != 0.;
+}
+
+
+// bounding-volume hierarchy (in progress)
+void Mesh::Submesh::buildZones()
+{
+	_zone = new Submesh::Zone(_mesh->_range, this);
+	for (int i = 0; i < _tris.size(); ++i)
+	{
+		_zone->insert(i);
+	}
+}
+
+// bounding-volume hierarchy
+void Mesh::buildZones()
+{
+	for (auto sm: _submesh)
+	{
+		sm.second->buildZones();
+	}
+}
+
+
+void Mesh::Submesh::Zone::insert(int iTri)
+{
+	bool allIn = true;
+	auto& tri = _submesh->_tris[iTri];
+	const auto& verts = _submesh->_mesh->_vertex;
+	pnt3 V[3]{};
+	for(int i = 0; i < 3; ++i)
+	{
+		auto& iVertex = tri._p[i]; // vertex indices
+		V[i] = std::get<0>(verts[iVertex]);
+		allIn &= _range.isIn(V[i]);// in zone volume
+	}
+	
+	vtr3 subDiag = _range.diag()/2;
+	if (allIn && subDiag.len() > Zone::minDiag) // preset resolution
+	{
+		auto& C = _range._min;
+		vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
+		
+		bool first = true;
+		int iZone = 0; // invalid
+		for (int m = 0; m < 3; ++m)
+		{
+			int i = 2.*r[m](0)/_range.diag()(0) > 1. ? 1 : 0;
+			int j = 2.*r[m](1)/_range.diag()(1) > 1. ? 1 : 0;
+			int k = 2.*r[m](2)/_range.diag()(2) > 1. ? 1 : 0;
+			if (first)
+			{
+				iZone = 4*i + 2*j + k;
+				first = false;
+			}
+			else if (iZone != 4*i + 2*j + k) // split across subzones
+			{
+				_iTris.push_back(iTri); // insert in this zone
+				return;
+			}
+		}
+		if (!_subzones[iZone])
+		{
+			int i = iZone/4;
+			int j = (iZone - 4*i)/2;
+			int k = iZone - 4*i - 2*j;
+			auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
+			_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
+		}
+		_subzones[iZone]->insert(iTri);
+	}
+	else
+	{
+		_iTris.push_back(iTri);
+	}
+	
+}
+
 

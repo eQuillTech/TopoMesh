@@ -63,19 +63,6 @@ struct TriIndex
 //
 typedef std::vector<TriIndex> TriIndexVector;
 
-//
-struct SubMesh
-{
-public:
- 	TriIndexVector _tris;	
-	atr3 _T;
-	
-	std::size_t numTriang() const{return _tris.size();}
-	
-	void operator*=(const atr3 &T){_T*=T;}
-	void operator/=(const atr3 &T){_T/=T;}
-	
-};
 
 //
 struct Mesh
@@ -88,7 +75,8 @@ public:
 		pnt3 _max;
 	 
 		Range(){init();}
-	 
+		Range(const pnt3& C, const vtr3& diag):_min(C), _max(C + diag) {}
+		Range(const gfrm3& f):_min(f.corner000()), _max(f.corner111()) {}
 		void init(){_min=pnt3(1.e12,1.e12,1.e12);_max=pnt3(-1.e12,-1.e12,-1.e12);}
 
 		pnt3 &min(){return _min;}
@@ -109,6 +97,8 @@ public:
 		operator gfrm3() const{return gfrm3(center(),diag());}
 		double const extent(const uint32_t i) const{return _max(i)-_min(i);}
 
+		bool isIn(const pnt3 &P);
+		
 		void expand(const pnt3 &P)
 		{
 		 for(uint32_t i=0;i<3;++i)
@@ -123,10 +113,50 @@ public:
 			 }
 		 }
 		}
-		} _range;
+	} _range;
+	
+	struct Submesh
+	{
+	public:
+		struct Zone
+		{
+			Range _range;
+			std::vector<int> _iTris{}; // indices of enclosed triangles
+			Zone* _subzones[8]{};
+			Submesh* _submesh;
+			
+			inline static double minDiag = 1.e-2; // resolution
+			
+			Zone(Range range, Submesh* submesh):_range(range), _submesh(submesh){}
+			~Zone();
+			
+			void insert(int iTri);			
+			double crossings(pnt3 P);// top-level call
+			double crossings(pnt3 P, pnt3 Q, bool &colinear);
+		} *_zone;
+		
+	private:
+		Mesh* _mesh;
+		
+	public:
+		TriIndexVector _tris;
+		atr3 _T;
 
-	std::map<std::string,SubMesh*> _submesh;
-	SubMesh* _currentSubmesh;
+		Submesh(Mesh* m) { _mesh = m; }
+		~Submesh();
+		std::size_t numTriang() const{return _tris.size();}
+
+		void operator*=(const atr3 &T){_T*=T;}
+		void operator/=(const atr3 &T){_T/=T;}
+
+		void buildZones();
+		
+		double crossings(const pnt3 &P);
+		double crossings(const pnt3 &P, pnt3 Q, bool &colinear);
+	};
+	
+	std::map<std::string,Submesh*> _submesh;
+	Submesh* _currentSubmesh;
 	
 	MeshVertexVector _vertex;
 
@@ -149,13 +179,14 @@ public:
 	
 	static bool _showData;
 	void findRange();
+	void buildZones();
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
 	
-	float intersectSign(pnt3 p, pnt3 q, TriIndex t, bool &colinear);
+	double crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear);
 
 	bool isIn(const pnt3 &P);
 
 };
 
-#endif
+#endif // !_MESH_

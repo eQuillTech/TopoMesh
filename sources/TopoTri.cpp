@@ -1762,7 +1762,7 @@ TopoTri::TopoTri
 	// Create row triangulation and collect elements
 
 	_submesh.clear();
-	_currentSubmesh=new SubMesh();
+	_currentSubmesh=new Submesh(this);
 	_submesh["topo"]=_currentSubmesh;
 
 	_currentSubmesh->_tris.clear();
