@@ -67,13 +67,17 @@ TEST(TopoMeshTest, is_in_torus)
 	
 	EXPECT_EQ(mesh.numVertex(), 8192u);
 
-	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
-	EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
-	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 50.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+	for (int i = 0; i < 1000; ++i)
+	{
+		EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
+		EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
+		EXPECT_EQ(mesh.isIn(pnt3(50., 20., 50.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+	}
+	mesh.buildZones();
 
 }
 
@@ -83,12 +87,15 @@ TEST(TopoMeshTest, is_in_torus_BVH)
 	ASSERT_TRUE(mesh.read(sTorus));
 	mesh.buildZones();
 	
-	EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
-	EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
-	EXPECT_EQ(mesh.isIn(pnt3(50., 20., 50.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
-	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+	for (int i = 0; i < 1000; ++i)
+	{
+		EXPECT_EQ(mesh.isIn(pnt3(150., 0., 0.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(50., 50., 50.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(50., 20., 0.)), true);
+		EXPECT_EQ(mesh.isIn(pnt3(0., 20., 50.)), true);
+		EXPECT_EQ(mesh.isIn(pnt3(50., 20., 50.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
+		EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
+	}
 
 }

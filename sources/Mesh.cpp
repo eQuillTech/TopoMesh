@@ -380,7 +380,7 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 			int j = (i + dj)%3;
 			for (int k = 0; k < 2; ++k)
 			{
-				if (D[k](j) >= x[k] && D[k](j) <= x[k] )
+				if (D[k](j) >= x[0] && D[k](j) <= x[1] )
 				{
 					intersects = true;
 					break;
