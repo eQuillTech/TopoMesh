@@ -481,6 +481,10 @@ void Mesh::Submesh::Zone::insert(int iTri)
 			}
 			_subzones[iZone]->insert(iTri);
 		}
+		else
+		{
+			_iTris.push_back(iTri);
+		}
 	}
 }
 
