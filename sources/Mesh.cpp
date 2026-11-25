@@ -392,9 +392,9 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 	if (!intersects) return 0; // misses box
 
 	// Ray penetrates box; check triangles
-	for (auto& tri: _submesh->_tris)
+	for (int iTri: _iTris)
 	{
-		s += _submesh->_mesh->crossings(P, Q, tri, colinear);
+		s += _submesh->_mesh->crossings(P, Q, _submesh->_tris[iTri], colinear);
 	}
 
 	for (auto& sz: _subzones)
@@ -405,7 +405,6 @@ float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 	return s;
 }
 
-//
 bool Mesh::isIn(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
