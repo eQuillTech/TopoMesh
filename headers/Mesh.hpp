@@ -76,6 +76,7 @@ public:
 	 
 		Range(){init();}
 		Range(const pnt3& C, const vtr3& diag):_min(C), _max(C + diag) {}
+		Range(const gfrm3& f):_min(f.corner000()), _max(f.corner111()) {}
 		void init(){_min=pnt3(1.e12,1.e12,1.e12);_max=pnt3(-1.e12,-1.e12,-1.e12);}
 
 		pnt3 &min(){return _min;}
@@ -125,14 +126,14 @@ public:
 			int _nTrisEnclosed = 0; // including subzones
 			Submesh* _submesh;
 			
-			inline static double minDiag = 1.e-4; // resolution
+			inline static double minDiag = 1.e-2; // resolution
 			
 			Zone(Range range, Submesh* submesh):_range(range), _submesh(submesh){}
 			~Zone();
 			
 			void insert(int iTri);			
-			float crossings(pnt3 P);// top-level call
-			float crossings(pnt3 P, pnt3 Q, bool &colinear);
+			double crossings(pnt3 P);// top-level call
+			double crossings(pnt3 P, pnt3 Q, bool &colinear);
 		} *_zone;
 		
 	private:
@@ -151,8 +152,8 @@ public:
 
 		void buildZones();
 		
-		float crossings(const pnt3 &P);
-		float crossings(const pnt3 &P, pnt3 Q, bool &colinear);
+		double crossings(const pnt3 &P);
+		double crossings(const pnt3 &P, pnt3 Q, bool &colinear);
 	};
 	
 	std::map<std::string,Submesh*> _submesh;
@@ -183,7 +184,7 @@ public:
 	pnt3 center(){return _range.min()+0.5*(_range.max()-_range.min());}
 	double size(std::size_t iDim){return _range.max()(iDim)-_range.min()(iDim);}
 	
-	float crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear);
+	double crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear);
 
 	bool isIn(const pnt3 &P);
 

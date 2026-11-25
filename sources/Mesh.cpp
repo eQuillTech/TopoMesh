@@ -217,10 +217,10 @@ void Mesh::findRange()
 
 
 // Determine sign +/-1 for edges, +/-0.5 if crossing, 0 if colinear
-float Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
+double Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 {
 		colinear = false;
-		vtr3 PQ = P - Q;
+		vtr3 d = Q - P;
 		
 		pnt3 pt[3];
 		for(int i=0;i<3;++i)
@@ -231,9 +231,9 @@ float Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 	
 		// get signed volumes
 		double sv[3] = {
-			PQ.dot(vt[1].cross(vt[2])),
-			PQ.dot(vt[2].cross(vt[0])),
-			PQ.dot(vt[0].cross(vt[1]))
+			d.dot(vt[1].cross(vt[2])),
+			d.dot(vt[2].cross(vt[0])),
+			d.dot(vt[0].cross(vt[1]))
 		};
 
 		// count signs
@@ -254,8 +254,8 @@ float Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 		// check if in forward direction
 		vtr3 n = (pt[1] - pt[0]).cross(pt[2] - pt[0]);
 		vtr3 rc = pt[2] - pnt3::origin;
-		double d = n.dot(rc);
-		double f = (d - n.dot(P - pnt3::origin))/n.dot(PQ);
+		double g = n.dot(rc);
+		double f = (g - n.dot(P - pnt3::origin))/n.dot(d);
 		if (f <= 0.) return 0.; // opposite ray
 				
 		if (nInter > 1)
@@ -277,7 +277,7 @@ Mesh::Submesh::~Submesh()
 }
 
 // Count ray crossings w/o BVH
-float Mesh::Submesh::crossings(const pnt3 &P)
+double Mesh::Submesh::crossings(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
 	if(numTriang() == 0) return 0;
@@ -291,7 +291,7 @@ float Mesh::Submesh::crossings(const pnt3 &P)
 		
 		Q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.; // midpoint
 		n = (p[1] - p[0]).cross(p[2] - p[0]); // normal
-		if (n.cross(P - Q0).len() != 0.) // accept if not parallel
+		if (n.cross(Q0 - P).len() != 0.) // accept if not parallel
 		{
 			n = n.norm();
 			break;
@@ -340,7 +340,7 @@ float Mesh::Submesh::crossings(const pnt3 &P)
 }
 
 // Count ray crossings
-float Mesh::Submesh::crossings(const pnt3 &P, pnt3 Q, bool &colinear)
+double Mesh::Submesh::crossings(const pnt3 &P, pnt3 Q, bool &colinear)
 {
 	double nCrossings = 0; // initialize
 	
@@ -362,39 +362,33 @@ Mesh::Submesh::Zone::~Zone()
 }
 
 // Count ray crossings
-float Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
+double Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 {
-	float s = 0;
+	double s = 0;
 	vtr3 d = Q - P;
 	auto& C = _range.min();
 	auto diag = _range.diag();
-	bool intersects = false;
+	double tLim[2] = {0, std::numeric_limits<double>::infinity()};
 	for (int i = 0; i < 3; ++i)
 	{
-		if (abs(d(i)) < 1.e-9) continue;// parallel to box
 		double x[2] = {C(i), C(i) + diag(i)};
-		double t[2] = {(x[0] - P(i))/d(i), (x[1] - P(i))/d(i)};
-		pnt3 D[2] = {P + t[0]*d, P + t[1]*d}; // ray intersection with plane
-		for (int dj = 0; dj < 2; ++dj)
+		if (abs(d(i)) < 1.e-12) // parallel
 		{
-			int j = (i + dj)%3;
-			for (int k = 0; k < 2; ++k)
-			{
-				if (D[k](j) >= x[0] && D[k](j) <= x[1] )
-				{
-					intersects = true;
-					break;
-				}
-			}
-			if (intersects) break;
+			if (P(i) < x[0] || P(i) > x[1]) { return 0; } // outside
+			continue;
 		}
+		double t[2] = {(x[0] - P(i))/d(i), (x[1] - P(i))/d(i)};
+		if (t[0] > t[1]) std::swap(t[0], t[1]);
+		tLim[0] = fmax(tLim[0], t[0]);
+		tLim[1] = fmin(tLim[1], t[1]);
+		if (tLim[0] > tLim[1]) { return 0; } // misses box
 	}
-	if (!intersects) return 0; // misses box
 
 	// Ray penetrates box; check triangles
 	for (int iTri: _iTris)
 	{
 		s += _submesh->_mesh->crossings(P, Q, _submesh->_tris[iTri], colinear);
+		if (colinear) return 0;
 	}
 
 	for (auto& sz: _subzones)
