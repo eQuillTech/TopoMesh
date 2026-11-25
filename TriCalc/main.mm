@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "TriCalc.h"
 
-NSString *imageName=@"topoe.tif";
+NSString *imageName=@"topo.tif";
 NSString *fileName=@"mars.obj";
 	
 int main(int argc, const char * argv[]) {

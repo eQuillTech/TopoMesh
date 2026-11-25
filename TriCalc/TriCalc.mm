@@ -63,8 +63,8 @@
 	//double zMin,zMax;
 	//getRange(data_img,imageSize.width,imageSize.height,zMin,zMax);
 
-	MeshRange range=topoTri->_range;
-	atr3 T(trf3::To,-range.min(2)*vtr3::Z);
+	Mesh::Range range=topoTri->_range;
+	atr3 T(trf3::ident,-range.min(2)*vtr3::Z);
 	arr::dbl2 D=arr::dbl2::ident(3,3);
 	D(0,0)=2./range.extent(0);D(1,1)=2./range.extent(1);D(2,2)=1./range.extent(2);
 	T*=atr3(D,-vtr3(1.,1.,0.));
