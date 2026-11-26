@@ -451,7 +451,7 @@ void Mesh::Submesh::Zone::build(const std::vector<int>& iTris)
 		vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
 		
 		bool first = true;
-		int iZone = 0; // invalid
+		int iZone = -1;// init invalid
 		for (int m = 0; m < 3; ++m)
 		{
 			int i = 2.*r[m](0)/_range.diag()(0) > 1. ? 1 : 0;
@@ -464,11 +464,11 @@ void Mesh::Submesh::Zone::build(const std::vector<int>& iTris)
 			}
 			else if (iZone != 4*i + 2*j + k) // split across subzones
 			{
-				split = true;
+				iZone = -1;// invalid
 				break;
 			}
 		}
-		if(split)
+		if(iZone == -1)
 			_iTris.push_back(iTri); // insert in this zone
 		else
 			subTris[iZone].push_back(iTri);// insert in subzone
