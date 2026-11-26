@@ -58,7 +58,6 @@ TEST(TopoMeshTest, is_in_boxhole_BVH)
 	EXPECT_EQ(mesh.isIn(pnt3(20., 80., -30.)), true);
 	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
 	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
-
 }
 
 TEST(TopoMeshTest, is_in_torus)
@@ -97,6 +96,7 @@ TEST(TopoMeshTest, is_in_torus_speed)
 	Mesh mesh;
 	ASSERT_TRUE(mesh.read(sTorus));
 	
+	// iterate to compare speed w/o BVH
 	for (int i = 0; i < 1000; ++i)
 	{
 		mesh.isIn(pnt3(50., 20., 0.));
@@ -111,6 +111,7 @@ TEST(TopoMeshTest, is_in_torus_BVH_speed)
 	ASSERT_TRUE(mesh.read(sTorus));
 	mesh.buildZones();
 	
+	// iterate to compare speed w BVH
 	for (int i = 0; i < 1000; ++i)
 	{
 		mesh.isIn(pnt3(50., 20., 0.));
