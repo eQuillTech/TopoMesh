@@ -7,6 +7,7 @@
 #include <stack>
 #include <fstream>
 #include <sstream>
+#include <numeric>
 
 #include "Mesh.hpp"
 
@@ -414,10 +415,9 @@ bool Mesh::isIn(const pnt3 &P)
 void Mesh::Submesh::buildZones()
 {
 	_zone = new Submesh::Zone(_mesh->_range, this);
-	for (int i = 0; i < _tris.size(); ++i)
-	{
-		_zone->insert(i);
-	}
+	auto iTris = std::vector<int>(_tris.size());
+	std::iota(iTris.begin(), iTris.end(), 0);
+	_zone->build(iTris);
 }
 
 // bounding-volume hierarchy
@@ -430,22 +430,23 @@ void Mesh::buildZones()
 }
 
 
-void Mesh::Submesh::Zone::insert(int iTri)
+void Mesh::Submesh::Zone::build(const std::vector<int>& iTris)
 {
-	bool allIn = true;
-	auto& tri = _submesh->_tris[iTri];
-	const auto& verts = _submesh->_mesh->_vertex;
-	pnt3 V[3]{};
-	for(int i = 0; i < 3; ++i)
-	{
-		auto& iVertex = tri._p[i]; // vertex indices
-		V[i] = std::get<0>(verts[iVertex]);
-		allIn &= _range.isIn(V[i]);// in zone volume
-	}
-	
+	const std::size_t minTris = 12;
 	vtr3 subDiag = _range.diag()/2;
-	if (allIn && subDiag.len() > Zone::minDiag) // preset resolution
+	if ((iTris.size() <= minTris) || (subDiag.len() < Zone::minDiag)) // preset resolution
 	{
+		_iTris = iTris;
+		return;
+	}
+	const auto& verts = _submesh->_mesh->_vertex;
+	const auto& tris = _submesh->_tris;
+	std::vector<int> subTris[8]{};
+	for (auto iTri: iTris)
+	{
+		bool split = false;
+		const auto& tri = tris[iTri];
+		pnt3 V[3] = {std::get<0>(verts[tri._i]), std::get<0>(verts[tri._j]), std::get<0>(verts[tri._k])};
 		auto& C = _range._min;
 		vtr3 r[3] = {V[0] - C, V[1] - C, V[2] - C};
 		
@@ -463,25 +464,32 @@ void Mesh::Submesh::Zone::insert(int iTri)
 			}
 			else if (iZone != 4*i + 2*j + k) // split across subzones
 			{
-				_iTris.push_back(iTri); // insert in this zone
-				return;
+				split = true;
+				break;
 			}
 		}
-		if (!_subzones[iZone])
-		{
-			int i = iZone/4;
-			int j = (iZone - 4*i)/2;
-			int k = iZone - 4*i - 2*j;
-			auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
-			_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
-		}
-		_subzones[iZone]->insert(iTri);
+		if(split)
+			_iTris.push_back(iTri); // insert in this zone
+		else
+			subTris[iZone].push_back(iTri);// insert in subzone
 	}
-	else
+	for (int iZone = 0; iZone < 8; ++iZone) // now distribute tris
 	{
-		_iTris.push_back(iTri);
+		auto& zt = subTris[iZone];
+		if (zt.size() > 0)
+		{
+			if (!_subzones[iZone])
+			{
+				int i = iZone/4;
+				int j = (iZone - 4*i)/2;
+				int k = iZone - 4*i - 2*j;
+				auto C = _range.min() + vtr3(i*subDiag(0), j*subDiag(1), k*subDiag(2));
+				_subzones[iZone] = new Zone(Range(C, subDiag), _submesh);
+			}
+			_subzones[iZone]->build(zt);
+		}
+
 	}
-	
 }
 
 

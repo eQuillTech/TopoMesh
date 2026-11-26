@@ -124,13 +124,14 @@ public:
 			std::vector<int> _iTris{}; // indices of enclosed triangles
 			Zone* _subzones[8]{};
 			Submesh* _submesh;
+			bool _split = false;
 			
-			inline static double minDiag = 1.e-2; // resolution
+			inline static double minDiag = 1.; // resolution
 			
 			Zone(Range range, Submesh* submesh):_range(range), _submesh(submesh){}
 			~Zone();
-			
-			void insert(int iTri);			
+			void build(const std::vector<int>& tris);
+			void insert(int iTri);
 			double crossings(pnt3 P);// top-level call
 			double crossings(pnt3 P, pnt3 Q, bool &colinear);
 		} *_zone;
