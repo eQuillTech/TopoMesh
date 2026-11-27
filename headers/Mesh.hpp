@@ -151,6 +151,7 @@ public:
 		void operator/=(const atr3 &T){_T/=T;}
 
 		void buildZones();
+		const bool isIn(const pnt3 &P);
 		
 		double crossings(const pnt3 &P);
 		double crossings(const pnt3 &P, pnt3 Q, bool &colinear);
@@ -186,7 +187,7 @@ public:
 	
 	double crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear);
 
-	bool isIn(const pnt3 &P);
+	const bool isIn(const pnt3 &P);
 
 };
 

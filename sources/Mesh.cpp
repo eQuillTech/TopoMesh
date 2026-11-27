@@ -217,7 +217,7 @@ void Mesh::findRange()
 }
 
 
-// Determine sign +/-1 for edges, +/-0.5 if crossing, 0 if colinear
+// Determine sign +/-1 for crossings, +/-0.5 for edges, or if colinear
 double Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 {
 		colinear = false;
@@ -266,7 +266,7 @@ double Mesh::crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear)
 		}
 
 		if (nInter == 1) { // intersects a shared edge
-			return 0.5*mth::sgn(sv[0]);
+			return nPos > 0 ? 0.5: -0.5;
 		}
 		
 		return mth::sgn(sv[0]);
@@ -277,7 +277,7 @@ Mesh::Submesh::~Submesh()
 	delete(_zone);
 }
 
-// Count ray crossings w/o BVH
+// Count ray crossings
 double Mesh::Submesh::crossings(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
@@ -292,52 +292,34 @@ double Mesh::Submesh::crossings(const pnt3 &P)
 		
 		Q0 = p[0] + ((p[1] - p[0]) + (p[2] - p[0]))/3.; // midpoint
 		n = (p[1] - p[0]).cross(p[2] - p[0]); // normal
-		if (n.cross(Q0 - P).len() != 0.) // accept if not parallel
+		if (n.cross(Q0 - P).len() > 1.e-6) // accept if not parallel
 		{
 			n = n.norm();
 			break;
 		}
 	}
 	
-	vtr3 dQ; // increment along normal
-	pnt3 Q;
-	bool needQ = true;
-	if (_zone) // use BVH
+	bool colinear = false;
+	do
 	{
-		if (needQ)
+		colinear = false;
+		vtr3 dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
+		pnt3 Q = Q0 + dQ;
+		if (_zone) // use BVH
+		{
+			nCrossings = _zone->crossings(P, Q, colinear);
+		}
+		else
 		{
 			nCrossings = 0.;
-			dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
-			Q = Q0 + dQ;
-			needQ = false;
-		}
-		bool colinear = false;
-		nCrossings = _zone->crossings(P, Q, colinear);
-	} else // linear sum
-	{
-		int i = 0;
-		while (i < numTriang())
-		{
-			if (needQ)
+			for (auto& tri: _tris)
 			{
-				nCrossings = 0.;
-				dQ = 1.e-6*(2.*mth::random() - 1.)*n; // new increment
-				Q = Q0 + dQ;
-				needQ = false;
-			}
-			bool colinear = false;
-			auto s = _mesh->crossings(P, Q, _tris[i], colinear);
-			if (colinear) // restart
-			{
-				i = 0;
-				needQ = true;
-			} else {
-				nCrossings += s;
-				++i;
+				nCrossings += _mesh->crossings(P, Q, tri, colinear);
+				if (colinear) break;
 			}
 		}
-	}
-	return nCrossings != 0.;
+	} while (colinear);
+	return nCrossings;
 }
 
 // Count ray crossings
@@ -400,7 +382,14 @@ double Mesh::Submesh::Zone::crossings(pnt3 P, pnt3 Q, bool &colinear)
 	return s;
 }
 
-bool Mesh::isIn(const pnt3 &P)
+// single (closed) submesh
+const bool Mesh::Submesh::isIn(const pnt3 &P)
+{
+	return crossings(P) != 0.;
+}
+
+// all submeshes
+const bool Mesh::isIn(const pnt3 &P)
 {
 	double nCrossings = 0; // initialize
 	for(auto& sm: _submesh)
@@ -414,6 +403,10 @@ bool Mesh::isIn(const pnt3 &P)
 // bounding-volume hierarchy (in progress)
 void Mesh::Submesh::buildZones()
 {
+	for (int i: {0, 1, 2})
+	{
+		if (_mesh->_range.diag()(i) < 1.e-8) return; // TODO: quadtree
+	}
 	_zone = new Submesh::Zone(_mesh->_range, this);
 	auto iTris = std::vector<int>(_tris.size());
 	std::iota(iTris.begin(), iTris.end(), 0);
@@ -488,7 +481,6 @@ void Mesh::Submesh::Zone::build(const std::vector<int>& iTris)
 			}
 			_subzones[iZone]->build(zt);
 		}
-
 	}
 }
 
