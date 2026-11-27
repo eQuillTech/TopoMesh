@@ -399,6 +399,16 @@ const bool Mesh::isIn(const pnt3 &P)
 	return nCrossings != 0.;
 }
 
+const bool Mesh::isIn(const pnt3 &P, const std::vector<std::string>& submeshNames)
+{
+	double nCrossings = 0; // initialize
+	for(auto& name: submeshNames)
+	{
+		if (_submesh.contains(name))
+			nCrossings += _submesh[name]->crossings(P);
+	}
+	return nCrossings != 0.;
+}
 
 // bounding-volume hierarchy (in progress)
 void Mesh::Submesh::buildZones()

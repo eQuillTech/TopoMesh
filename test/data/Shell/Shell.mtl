@@ -1,7 +1,7 @@
-newmtl Lorenzo 1
+newmtl outer_box
 Kd 1.000 1.000 1.000
 d 1.000
 map_Kd Shell.png
-newmtl Lorenzo
+newmtl inner_box
 Kd 0.059 0.137 0.980
 d 1.000

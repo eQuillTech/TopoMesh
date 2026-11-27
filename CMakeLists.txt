@@ -20,7 +20,7 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${modules_dir}weiss ${modules_dir}weiss/weiss2 ${modules_dir}weiss/weiss2/headers ${modules_dir}weiss/weiss3 ${modules_dir}weiss/weiss3/headers
         ${modules_dir}grfx ${modules_dir}grfx/grfx2 ${modules_dir}grfx/grfx2/headers ${modules_dir}grfx/grfx3 ${modules_dir}grfx/grfx3/headers)
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 source_group("headers" FILES ${cpp_headers})
 source_group("sources" FILES ${cpp_sources})

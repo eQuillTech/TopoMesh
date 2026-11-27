@@ -188,6 +188,7 @@ public:
 	double crossings(pnt3 P, pnt3 Q, TriIndex t, bool &colinear);
 
 	const bool isIn(const pnt3 &P);
+	const bool isIn(const pnt3 &P, const std::vector<std::string>& submeshNames);
 
 };
 
