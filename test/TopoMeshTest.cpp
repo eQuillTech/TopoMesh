@@ -6,6 +6,7 @@
 const std::string sBox = std::string(TOPOMESH_TEST_DATA_DIR) + "/Box/Box.obj";
 const std::string sBoxHole = std::string(TOPOMESH_TEST_DATA_DIR) + "/BoxHole/BoxHole.obj";
 const std::string sTorus = std::string(TOPOMESH_TEST_DATA_DIR) + "/Torus/Torus.obj";
+const std::string sShell = std::string(TOPOMESH_TEST_DATA_DIR) + "/Shell/Shell.obj";
 
 /*
  * TopoMesh tests
@@ -90,6 +91,77 @@ TEST(TopoMeshTest, is_in_torus_BVH)
 	EXPECT_EQ(mesh.isIn(pnt3(0., 150., 0.)), false);
 	EXPECT_EQ(mesh.isIn(pnt3(0., -10., 0.)), false);
 }
+
+/*
+TEST(TopoMeshTest, is_in_shell_random_BVH)
+{
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sShell));
+	mesh.buildZones();
+	
+	int i = 0;
+	while (i < 10000)
+	{
+
+		pnt3 P(200.*(mth::random() - 0.5), 200.*(mth::random() - 0.5), 200.*(mth::random() - 0.5));
+		double r = (P - pnt3::origin).len();
+		
+		if ((std::abs(r - 25.) < 0.1) || (std::abs(r - 50.) < 0.1)) continue;
+		
+		EXPECT_EQ(mesh.isIn(P), (r > 25.) && (r < 50.)) << P << ", " << r;
+		++i;
+	}
+}
+*/
+
+TEST(TopoMeshTest, is_in_box_shell_random_build_BVH)
+{
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sShell));
+	
+	int i = 0;
+	while (i < 10000)
+	{
+		pnt3 P(100.*(mth::random() - 0.5), 100.*(mth::random() - 0.5), 100.*(mth::random() - 0.5));
+		vtr3 r = P - pnt3::origin;
+		
+		bool inX = ((std::abs(r.x()) > 20.) && (std::abs(r.x()) < 40.)) && (std::abs(r.y()) < 40.) && (std::abs(r.z()) < 40.);
+		bool inY = (std::abs(r.x()) < 40.) && ((std::abs(r.y()) > 20.) && (std::abs(r.y()) < 40.)) && (std::abs(r.z()) < 40.);
+		bool inZ = (std::abs(r.x()) < 40.) && (std::abs(r.y()) < 40.) && ((std::abs(r.z()) > 20.) && (std::abs(r.z()) < 40.));
+		
+		bool expRes = inX || inY || inZ;
+		
+		EXPECT_EQ(mesh.isIn(P), expRes) << P;
+		++i;
+	}
+	mesh.buildZones();
+
+}
+
+TEST(TopoMeshTest, is_in_box_shell_random_BVH)
+{
+	Mesh mesh;
+	ASSERT_TRUE(mesh.read(sShell));
+	mesh.buildZones();
+	
+	int i = 0;
+	while (i < 10000)
+	{
+
+		pnt3 P(100.*(mth::random() - 0.5), 100.*(mth::random() - 0.5), 100.*(mth::random() - 0.5));
+		vtr3 r = P - pnt3::origin;
+		
+		bool inX = ((std::abs(r.x()) > 20.) && (std::abs(r.x()) < 40.)) && (std::abs(r.y()) < 40.) && (std::abs(r.z()) < 40.);
+		bool inY = (std::abs(r.x()) < 40.) && ((std::abs(r.y()) > 20.) && (std::abs(r.y()) < 40.)) && (std::abs(r.z()) < 40.);
+		bool inZ = (std::abs(r.x()) < 40.) && (std::abs(r.y()) < 40.) && ((std::abs(r.z()) > 20.) && (std::abs(r.z()) < 40.));
+		
+		bool expRes = inX || inY || inZ;
+		
+		EXPECT_EQ(mesh.isIn(P), expRes) << P;
+		++i;
+	}
+}
+
 
 TEST(TopoMeshTest, is_in_torus_speed)
 {
